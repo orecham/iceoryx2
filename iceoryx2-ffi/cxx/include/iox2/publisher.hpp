@@ -56,6 +56,7 @@ class Publisher {
     /// The user has to initialize the payload before it can be sent.
     ///
     /// On failure it returns [`PublisherLoanError`] describing the failure.
+    template <typename T = Payload, typename = std::enable_if_t<!iox::IsSlice<T>::VALUE, void>>
     auto loan_uninit() -> iox::expected<SampleMutUninit<S, Payload, UserHeader>, PublisherLoanError>;
 
     /// Loans/allocates a [`SampleMut`] from the underlying data segment of the [`Publisher`]
@@ -63,6 +64,7 @@ class Publisher {
     /// can be used to loan an uninitalized [`SampleMut`].
     ///
     /// On failure it returns [`PublisherLoanError`] describing the failure.
+    template <typename T = Payload, typename = std::enable_if_t<!iox::IsSlice<T>::VALUE, void>>
     auto loan() -> iox::expected<SampleMut<S, Payload, UserHeader>, PublisherLoanError>;
 
     /// Loans/allocates a [`SampleMut`] from the underlying data segment of the [`Publisher`]
@@ -164,6 +166,7 @@ inline auto Publisher<S, Payload, UserHeader>::send_copy(const Payload& payload)
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
 inline auto Publisher<S, Payload, UserHeader>::loan_uninit()
     -> iox::expected<SampleMutUninit<S, Payload, UserHeader>, PublisherLoanError> {
     SampleMutUninit<S, Payload, UserHeader> sample;
@@ -178,6 +181,7 @@ inline auto Publisher<S, Payload, UserHeader>::loan_uninit()
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
 inline auto
 Publisher<S, Payload, UserHeader>::loan() -> iox::expected<SampleMut<S, Payload, UserHeader>, PublisherLoanError> {
     auto sample = loan_uninit();
@@ -202,7 +206,16 @@ template <ServiceType S, typename Payload, typename UserHeader>
 template <typename T, typename>
 inline auto Publisher<S, Payload, UserHeader>::loan_slice_uninit(const uint64_t number_of_elements)
     -> iox::expected<SampleMutUninit<S, T, UserHeader>, PublisherLoanError> {
-    IOX_TODO();
+    SampleMutUninit<S, Payload, UserHeader> sample;
+
+    auto result = iox2_publisher_loan_slice_uninit(
+        number_of_elements, &m_handle, &sample.m_sample.m_sample, &sample.m_sample.m_handle);
+
+    if (result == IOX2_OK) {
+        return iox::ok(std::move(sample));
+    }
+
+    return iox::err(iox::into<PublisherLoanError>(result));
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>

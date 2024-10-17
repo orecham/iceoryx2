@@ -362,6 +362,16 @@ pub unsafe extern "C" fn iox2_publisher_loan(
     sample_struct_ptr: *mut iox2_sample_mut_t,
     sample_handle_ptr: *mut iox2_sample_mut_h,
 ) -> c_int {
+    iox2_publisher_loan_slice_uninit(1, publisher_handle, sample_struct_ptr, sample_handle_ptr)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn iox2_publisher_loan_slice_uninit(
+    number_of_elements: usize,
+    publisher_handle: iox2_publisher_h_ref,
+    sample_struct_ptr: *mut iox2_sample_mut_t,
+    sample_handle_ptr: *mut iox2_sample_mut_h,
+) -> c_int {
     publisher_handle.assert_non_null();
     debug_assert!(!sample_handle_ptr.is_null());
 
@@ -383,7 +393,12 @@ pub unsafe extern "C" fn iox2_publisher_loan(
     let publisher = &mut *publisher_handle.as_type();
 
     match publisher.service_type {
-        iox2_service_type_e::IPC => match publisher.value.as_ref().ipc.loan_slice_uninit(1) {
+        iox2_service_type_e::IPC => match publisher
+            .value
+            .as_ref()
+            .ipc
+            .loan_slice_uninit(number_of_elements)
+        {
             Ok(sample) => {
                 let (sample_struct_ptr, deleter) = init_sample_struct_ptr(sample_struct_ptr);
                 (*sample_struct_ptr).init(
@@ -396,19 +411,26 @@ pub unsafe extern "C" fn iox2_publisher_loan(
             }
             Err(error) => error.into_c_int(),
         },
-        iox2_service_type_e::LOCAL => match publisher.value.as_ref().local.loan_slice_uninit(1) {
-            Ok(sample) => {
-                let (sample_struct_ptr, deleter) = init_sample_struct_ptr(sample_struct_ptr);
-                (*sample_struct_ptr).init(
-                    publisher.service_type,
-                    SampleMutUninitUnion::new_local(sample),
-                    deleter,
-                );
-                *sample_handle_ptr = (*sample_struct_ptr).as_handle();
-                IOX2_OK
+        iox2_service_type_e::LOCAL => {
+            match publisher
+                .value
+                .as_ref()
+                .local
+                .loan_slice_uninit(number_of_elements)
+            {
+                Ok(sample) => {
+                    let (sample_struct_ptr, deleter) = init_sample_struct_ptr(sample_struct_ptr);
+                    (*sample_struct_ptr).init(
+                        publisher.service_type,
+                        SampleMutUninitUnion::new_local(sample),
+                        deleter,
+                    );
+                    *sample_handle_ptr = (*sample_struct_ptr).as_handle();
+                    IOX2_OK
+                }
+                Err(error) => error.into_c_int(),
             }
-            Err(error) => error.into_c_int(),
-        },
+        }
     }
 }
 
