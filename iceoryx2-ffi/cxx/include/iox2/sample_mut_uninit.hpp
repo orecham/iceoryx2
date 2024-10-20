@@ -56,10 +56,20 @@ class SampleMutUninit {
     auto user_header_mut() -> T&;
 
     /// Returns a reference to the const payload of the sample.
+    template <typename T = Payload, typename = std::enable_if_t<!iox::IsSlice<T>::VALUE, void>>
     auto payload() const -> const Payload&;
 
     /// Returns a reference to the payload of the sample.
+    template <typename T = Payload, typename = std::enable_if_t<!iox::IsSlice<T>::VALUE, void>>
     auto payload_mut() -> Payload&;
+
+    /// Returns uninitialized loaned memory accessible in a const Slice instance. Only enabled for types Slice<T>.
+    template <typename T = Payload, typename = std::enable_if_t<iox::IsSlice<T>::VALUE, void>>
+    auto payload_slice() const -> const Payload;
+
+    /// Returns uninitialized loaned memory accessible in a Slice instance. Only enabled for types Slice<T>.
+    template <typename T = Payload, typename = std::enable_if_t<iox::IsSlice<T>::VALUE, void>>
+    auto payload_slice_mut() -> Payload;
 
     /// Writes the payload to the sample
     template <typename T = Payload, typename = std::enable_if_t<!iox::IsSlice<T>::VALUE, T>>
@@ -132,13 +142,27 @@ inline auto SampleMutUninit<S, Payload, UserHeader>::user_header_mut() -> T& {
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
 inline auto SampleMutUninit<S, Payload, UserHeader>::payload() const -> const Payload& {
     return m_sample.payload();
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
 inline auto SampleMutUninit<S, Payload, UserHeader>::payload_mut() -> Payload& {
     return m_sample.payload_mut();
+}
+
+template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
+inline auto SampleMutUninit<S, Payload, UserHeader>::payload_slice() const -> const Payload {
+    return m_sample.payload_slice();
+}
+
+template <ServiceType S, typename Payload, typename UserHeader>
+template <typename T, typename>
+inline auto SampleMutUninit<S, Payload, UserHeader>::payload_slice_mut() -> Payload {
+    return m_sample.payload_slice_mut();
 }
 
 template <ServiceType S, typename Payload, typename UserHeader>

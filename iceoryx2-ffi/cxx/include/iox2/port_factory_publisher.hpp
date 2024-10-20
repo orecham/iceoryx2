@@ -71,7 +71,8 @@ PortFactoryPublisher<S, Payload, UserHeader>::create() && -> iox::expected<Publi
         iox2_port_factory_publisher_builder_unable_to_deliver_strategy(
             &m_handle, static_cast<iox2_unable_to_deliver_strategy_e>(iox::into<int>(value)));
     });
-    m_max_slice_len.and_then([](auto) { IOX_TODO(); });
+    m_max_slice_len.and_then(
+        [&](auto value) { iox2_port_factory_publisher_builder_set_max_slice_len(&m_handle, value); });
     m_max_loaned_samples.and_then(
         [&](auto value) { iox2_port_factory_publisher_builder_set_max_loaned_samples(&m_handle, value); });
 

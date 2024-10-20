@@ -16,6 +16,7 @@
 #include "iox/assertions_addendum.hpp"
 
 #include <cstdint>
+#include <type_traits>
 
 namespace iox {
 template <typename T>
@@ -25,27 +26,65 @@ class Slice {
     using ConstIterator = const T*;
     using ValueType = T;
 
-    auto size() const -> uint64_t {
-        IOX_TODO();
+    template <typename U>
+    Slice(U* data, uint64_t len)
+        : m_data { const_cast<T*>(static_cast<const std::remove_pointer_t<U>*>(data)) }
+        , m_len { len } {
     }
+
+    /// Returns the length of the slice.
+    auto len() const -> uint64_t {
+        return m_len;
+    }
+    /// Accesses an element of the slice by index (const version).
+    /// @param n The index of the element to access.
+    /// @pre n < m_len
     auto operator[](const uint64_t n) const -> const T& {
-        IOX_TODO();
+        IOX_ASSERT(n < m_len, "Index out of bounds");
+        return *(m_data + n);
     }
+
+    /// Accesses an element of the slice by index (non-const version).
+    /// @param n The index of the element to access.
+    /// @pre n < m_len
     auto operator[](const uint64_t n) -> T& {
-        IOX_TODO();
+        IOX_ASSERT(n < m_len, "Index out of bounds");
+        return *(m_data + n);
     }
+
+    /// Returns an iterator to the beginning of the slice.
     auto begin() -> Iterator {
-        IOX_TODO();
+        return m_data;
     }
+
+    /// Returns a const iterator to the beginning of the slice.
     auto begin() const -> ConstIterator {
-        IOX_TODO();
+        return m_data;
     }
+
+    /// Returns an iterator to the end of the slice.
     auto end() -> Iterator {
-        IOX_TODO();
+        return m_data + m_len;
     }
+
+    /// Returns a const iterator to the end of the slice.
     auto end() const -> ConstIterator {
-        IOX_TODO();
+        return m_data + m_len;
     }
+
+    /// Returns a pointer to the underlying data of the slice.
+    auto data() -> T* {
+        return m_data;
+    };
+
+    /// Returns a const pointer to the underlying data of the slice.
+    auto data() const -> const T* {
+        return m_data;
+    };
+
+  private:
+    T* m_data;
+    uint64_t m_len;
 };
 
 template <typename>
