@@ -15,7 +15,7 @@
 use crate::api::{
     c_size_t, iox2_port_factory_pub_sub_h, iox2_port_factory_pub_sub_t,
     iox2_service_builder_pub_sub_h, iox2_service_builder_pub_sub_h_ref, iox2_service_type_e,
-    AssertNonNullHandle, HandleToType, IntoCInt, PayloadFfi, PortFactoryPubSubUnion,
+    AssertNonNullHandle, ErrorAsString, HandleToType, IntoCInt, PayloadFfi, PortFactoryPubSubUnion,
     ServiceBuilderUnion, UserHeaderFfi, IOX2_OK,
 };
 
@@ -61,8 +61,38 @@ pub enum iox2_pub_sub_open_or_create_error_e {
     C_INSUFFICIENT_PERMISSIONS,
     C_INTERNAL_FAILURE,
     C_IS_BEING_CREATED_BY_ANOTHER_INSTANCE,
-    C_OLD_CONNECTION_STILL_ACTIVE,
     C_HANGS_IN_CREATION,
+}
+
+impl ErrorAsString for iox2_pub_sub_open_or_create_error_e {
+    fn as_str(&self) -> &'static str {
+        match self {
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_EXIST => PublishSubscribeOpenError::DoesNotExist.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INTERNAL_FAILURE => PublishSubscribeOpenError::InternalFailure.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INCOMPATIBLE_TYPES => PublishSubscribeOpenError::IncompatibleTypes.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INCOMPATIBLE_MESSAGING_PATTERN => PublishSubscribeOpenError::IncompatibleMessagingPattern.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INCOMPATIBLE_ATTRIBUTES => PublishSubscribeOpenError::IncompatibleAttributes.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_MIN_BUFFER_SIZE => PublishSubscribeOpenError::DoesNotSupportRequestedMinBufferSize.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_MIN_HISTORY_SIZE => PublishSubscribeOpenError::DoesNotSupportRequestedMinHistorySize.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_MIN_SUBSCRIBER_BORROWED_SAMPLES => PublishSubscribeOpenError::DoesNotSupportRequestedMinSubscriberBorrowedSamples.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_PUBLISHERS => PublishSubscribeOpenError::DoesNotSupportRequestedAmountOfPublishers.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_SUBSCRIBERS => PublishSubscribeOpenError::DoesNotSupportRequestedAmountOfSubscribers.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_NODES => PublishSubscribeOpenError::DoesNotSupportRequestedAmountOfNodes.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INCOMPATIBLE_OVERFLOW_BEHAVIOR => PublishSubscribeOpenError::IncompatibleOverflowBehavior.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_INSUFFICIENT_PERMISSIONS => PublishSubscribeOpenError::InsufficientPermissions.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_SERVICE_IN_CORRUPTED_STATE => PublishSubscribeOpenError::ServiceInCorruptedState.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_HANGS_IN_CREATION => PublishSubscribeOpenError::HangsInCreation.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_EXCEEDS_MAX_NUMBER_OF_NODES => PublishSubscribeOpenError::ExceedsMaxNumberOfNodes.as_str(),
+            iox2_pub_sub_open_or_create_error_e::O_IS_MARKED_FOR_DESTRUCTION => PublishSubscribeOpenError::IsMarkedForDestruction.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_SERVICE_IN_CORRUPTED_STATE => PublishSubscribeCreateError::ServiceInCorruptedState.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_SUBSCRIBER_BUFFER_MUST_BE_LARGER_THAN_HISTORY_SIZE => PublishSubscribeCreateError::SubscriberBufferMustBeLargerThanHistorySize.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_ALREADY_EXISTS => PublishSubscribeCreateError::AlreadyExists.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_INSUFFICIENT_PERMISSIONS => PublishSubscribeCreateError::InsufficientPermissions.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_INTERNAL_FAILURE => PublishSubscribeCreateError::InternalFailure.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_IS_BEING_CREATED_BY_ANOTHER_INSTANCE => PublishSubscribeCreateError::IsBeingCreatedByAnotherInstance.as_str(),
+            iox2_pub_sub_open_or_create_error_e::C_HANGS_IN_CREATION => PublishSubscribeCreateError::HangsInCreation.as_str(),
+        }
+    }
 }
 
 impl IntoCInt for PublishSubscribeOpenError {
@@ -199,6 +229,13 @@ pub enum iox2_type_detail_error_e {
 // END type definition
 
 // BEGIN C API
+
+#[no_mangle]
+pub unsafe extern "C" fn iox2_pub_sub_open_or_create_error_string(
+    error: iox2_pub_sub_open_or_create_error_e,
+) -> *const c_char {
+    error.as_cstr()
+}
 
 /// Sets the user header type details for the builder
 ///

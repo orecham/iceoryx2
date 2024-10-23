@@ -157,6 +157,12 @@ enum class EventOpenOrCreateError : uint8_t {
     /// [`SampleMut`] in use.
     CreateOldConnectionsStillActive,
 };
+
+
+auto as_string(const iox2::EventOpenError& error) -> const char*;
+auto as_string(const iox2::EventCreateError& error) -> const char*;
+auto as_string(const iox2::EventOpenOrCreateError& error) -> const char*;
+
 } // namespace iox2
 
 #endif
