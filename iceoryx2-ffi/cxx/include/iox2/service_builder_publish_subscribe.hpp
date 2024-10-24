@@ -125,7 +125,6 @@ inline ServiceBuilderPublishSubscribe<Payload, UserHeader, S>::ServiceBuilderPub
 
 template <typename Payload, typename UserHeader, ServiceType S>
 inline void ServiceBuilderPublishSubscribe<Payload, UserHeader, S>::set_parameters() {
-    m_payload_alignment.and_then([](auto) { IOX_TODO(); });
     m_enable_safe_overflow.and_then(
         [&](auto value) { iox2_service_builder_pub_sub_set_enable_safe_overflow(&m_handle, value); });
     m_subscriber_max_borrowed_samples.and_then(
@@ -135,6 +134,8 @@ inline void ServiceBuilderPublishSubscribe<Payload, UserHeader, S>::set_paramete
         [&](auto value) { iox2_service_builder_pub_sub_set_subscriber_max_buffer_size(&m_handle, value); });
     m_max_subscribers.and_then([&](auto value) { iox2_service_builder_pub_sub_set_max_subscribers(&m_handle, value); });
     m_max_publishers.and_then([&](auto value) { iox2_service_builder_pub_sub_set_max_publishers(&m_handle, value); });
+    m_payload_alignment.and_then(
+        [&](auto value) { iox2_service_builder_pub_sub_set_payload_alignment(&m_handle, value); });
     m_max_nodes.and_then([&](auto value) { iox2_service_builder_pub_sub_set_max_nodes(&m_handle, value); });
 
     // payload type details

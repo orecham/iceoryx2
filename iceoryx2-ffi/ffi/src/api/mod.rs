@@ -18,6 +18,7 @@ use iceoryx2_bb_container::semantic_string::SemanticStringError;
 use core::ffi::{c_int, c_void};
 
 mod config;
+mod error;
 mod event_id;
 mod file_descriptor;
 mod iceoryx2_settings;
@@ -58,6 +59,7 @@ mod waitset_builder;
 mod waitset_guard;
 
 pub use config::*;
+pub use error::*;
 pub use event_id::*;
 pub use file_descriptor::*;
 pub use iceoryx2_settings::*;

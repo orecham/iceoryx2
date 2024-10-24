@@ -16,6 +16,7 @@
 #include "iox/assertions_addendum.hpp"
 
 #include <cstdint>
+#include <type_traits>
 
 namespace iox {
 template <typename T>
@@ -25,27 +26,52 @@ class Slice {
     using ConstIterator = const T*;
     using ValueType = T;
 
-    auto size() const -> uint64_t {
-        IOX_TODO();
+    template <typename U>
+    Slice(U* data, uint64_t len)
+        : m_data { const_cast<T*>(static_cast<const std::remove_pointer_t<U>*>(data)) }
+        , m_len { len } {
+    }
+
+    auto len() const -> uint64_t {
+        return m_len;
     }
     auto operator[](const uint64_t n) const -> const T& {
-        IOX_TODO();
+        IOX_ASSERT(n < m_len, "Index out of bounds");
+        return *(m_data + n);
     }
+
     auto operator[](const uint64_t n) -> T& {
-        IOX_TODO();
+        IOX_ASSERT(n < m_len, "Index out of bounds");
+        return *(m_data + n);
     }
+
     auto begin() -> Iterator {
-        IOX_TODO();
+        return m_data;
     }
+
     auto begin() const -> ConstIterator {
-        IOX_TODO();
+        return m_data;
     }
+
     auto end() -> Iterator {
-        IOX_TODO();
+        return m_data + m_len;
     }
+
     auto end() const -> ConstIterator {
-        IOX_TODO();
+        return m_data + m_len;
     }
+
+    auto data() -> T* {
+        return m_data;
+    };
+
+    auto data() const -> const T* {
+        return m_data;
+    };
+
+  private:
+    T* m_data;
+    uint64_t m_len;
 };
 
 template <typename>

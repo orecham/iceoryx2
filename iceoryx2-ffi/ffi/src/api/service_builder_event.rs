@@ -14,8 +14,8 @@
 
 use crate::api::{
     c_size_t, iox2_port_factory_event_h, iox2_port_factory_event_t, iox2_service_builder_event_h,
-    iox2_service_builder_event_h_ref, iox2_service_type_e, AssertNonNullHandle, HandleToType,
-    IntoCInt, PortFactoryEventUnion, ServiceBuilderUnion, IOX2_OK,
+    iox2_service_builder_event_h_ref, iox2_service_type_e, AssertNonNullHandle, ErrorAsString,
+    HandleToType, IntoCInt, PortFactoryEventUnion, ServiceBuilderUnion, IOX2_OK,
 };
 
 use iceoryx2::prelude::*;
@@ -24,7 +24,7 @@ use iceoryx2::service::builder::event::{
 };
 use iceoryx2::service::port_factory::event::PortFactory;
 
-use core::ffi::c_int;
+use core::ffi::{c_char, c_int};
 use core::mem::ManuallyDrop;
 
 // BEGIN types definition
@@ -51,7 +51,70 @@ pub enum iox2_event_open_or_create_error_e {
     C_ALREADY_EXISTS,
     C_HANGS_IN_CREATION,
     C_INSUFFICIENT_PERMISSIONS,
-    C_OLD_CONNECTION_STILL_ACTIVE,
+}
+
+impl ErrorAsString for iox2_event_open_or_create_error_e {
+    fn as_str(&self) -> &'static str {
+        match self {
+            iox2_event_open_or_create_error_e::O_DOES_NOT_EXIST => {
+                EventOpenError::DoesNotExist.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_INSUFFICIENT_PERMISSIONS => {
+                EventOpenError::InsufficientPermissions.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_SERVICE_IN_CORRUPTED_STATE => {
+                EventOpenError::ServiceInCorruptedState.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_INCOMPATIBLE_MESSAGING_PATTERN => {
+                EventOpenError::IncompatibleMessagingPattern.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_INCOMPATIBLE_ATTRIBUTES => {
+                EventOpenError::IncompatibleAttributes.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_INTERNAL_FAILURE => {
+                EventOpenError::InternalFailure.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_HANGS_IN_CREATION => {
+                EventOpenError::HangsInCreation.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_NOTIFIERS => {
+                EventOpenError::DoesNotSupportRequestedAmountOfNotifiers.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_LISTENERS => {
+                EventOpenError::DoesNotSupportRequestedAmountOfListeners.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_MAX_EVENT_ID => {
+                EventOpenError::DoesNotSupportRequestedMaxEventId.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_DOES_NOT_SUPPORT_REQUESTED_AMOUNT_OF_NODES => {
+                EventOpenError::DoesNotSupportRequestedAmountOfNodes.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_EXCEEDS_MAX_NUMBER_OF_NODES => {
+                EventOpenError::ExceedsMaxNumberOfNodes.as_str()
+            }
+            iox2_event_open_or_create_error_e::O_IS_MARKED_FOR_DESTRUCTION => {
+                EventOpenError::IsMarkedForDestruction.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_SERVICE_IN_CORRUPTED_STATE => {
+                EventCreateError::ServiceInCorruptedState.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_INTERNAL_FAILURE => {
+                EventCreateError::InternalFailure.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_IS_BEING_CREATED_BY_ANOTHER_INSTANCE => {
+                EventCreateError::IsBeingCreatedByAnotherInstance.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_ALREADY_EXISTS => {
+                EventCreateError::AlreadyExists.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_HANGS_IN_CREATION => {
+                EventCreateError::HangsInCreation.as_str()
+            }
+            iox2_event_open_or_create_error_e::C_INSUFFICIENT_PERMISSIONS => {
+                EventCreateError::InsufficientPermissions.as_str()
+            }
+        }
+    }
 }
 
 impl IntoCInt for EventOpenError {
@@ -134,6 +197,13 @@ impl IntoCInt for EventOpenOrCreateError {
 // END type definition
 
 // BEGIN C API
+
+#[no_mangle]
+pub unsafe extern "C" fn iox2_event_open_or_create_error_string(
+    error: iox2_event_open_or_create_error_e,
+) -> *const c_char {
+    error.as_cstr()
+}
 
 /// Sets the max notifiers for the builder
 ///
