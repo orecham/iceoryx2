@@ -18,6 +18,7 @@
 #include "iox2/node_wait_failure.hpp"
 #include "iox2/notifier_error.hpp"
 #include "iox2/publisher_error.hpp"
+#include "iox2/semantic_string.hpp"
 #include "iox2/service_builder_event_error.hpp"
 #include "iox2/service_builder_publish_subscribe_error.hpp"
 #include "iox2/service_error_enums.hpp"
@@ -92,6 +93,10 @@ auto error_string(const iox2::PublishSubscribeCreateError& error) -> const char*
 
 auto error_string(const iox2::PublishSubscribeOpenOrCreateError& error) -> const char* {
     return iox2_pub_sub_open_or_create_error_string(iox::into<iox2_pub_sub_open_or_create_error_e>(error));
+}
+
+auto error_string(const iox2::SemanticStringError& error) -> const char* {
+    return iox2_semantic_string_error_string(iox::into<iox2_semantic_string_error_e>(error));
 }
 
 auto error_string(const iox2::EventOpenError& error) -> const char* {

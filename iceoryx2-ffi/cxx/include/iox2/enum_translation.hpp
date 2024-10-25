@@ -51,6 +51,19 @@ constexpr auto from<int, iox2::SemanticStringError>(const int value) noexcept ->
 }
 
 template <>
+constexpr auto from<iox2::SemanticStringError, iox2_semantic_string_error_e>(
+    const iox2::SemanticStringError value) noexcept -> iox2_semantic_string_error_e {
+    switch (value) {
+    case iox2::SemanticStringError::InvalidContent:
+        return iox2_semantic_string_error_e_INVALID_CONTENT;
+    case iox2::SemanticStringError::ExceedsMaximumLength:
+        return iox2_semantic_string_error_e_EXCEEDS_MAXIMUM_LENGTH;
+    }
+
+    IOX_UNREACHABLE();
+}
+
+template <>
 constexpr auto from<int, iox2::ServiceType>(const int value) noexcept -> iox2::ServiceType {
     const auto service_type = static_cast<iox2_service_type_e>(value);
     switch (service_type) {
