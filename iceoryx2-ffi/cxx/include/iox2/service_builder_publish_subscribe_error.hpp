@@ -176,9 +176,9 @@ enum class PublishSubscribeOpenOrCreateError : uint8_t {
     CreateHangsInCreation,
 };
 
-auto as_string(const iox2::PublishSubscribeOpenError& error) -> const char*;
-auto as_string(const iox2::PublishSubscribeCreateError& error) -> const char*;
-auto as_string(const iox2::PublishSubscribeOpenOrCreateError& error) -> const char*;
+auto error_string(const iox2::PublishSubscribeOpenError& error) -> const char*;
+auto error_string(const iox2::PublishSubscribeCreateError& error) -> const char*;
+auto error_string(const iox2::PublishSubscribeOpenOrCreateError& error) -> const char*;
 
 } // namespace iox2
 
