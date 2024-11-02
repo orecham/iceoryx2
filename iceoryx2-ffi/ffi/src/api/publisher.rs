@@ -182,7 +182,7 @@ impl HandleToType for iox2_publisher_h_ref {
 unsafe fn send_copy<S: Service>(
     publisher: &Publisher<S, PayloadFfi, UserHeaderFfi>,
     data_ptr: *const c_void,
-    data_len: usize,
+    size_of_element: usize,
     number_of_recipients: *mut usize,
 ) -> c_int {
     // loan_slice_uninit(1) <= 1 is correct here since it defines the number of
@@ -193,6 +193,38 @@ unsafe fn send_copy<S: Service>(
         Err(e) => return e.into_c_int(),
     };
 
+    if sample.payload().len() < size_of_element {
+        return iox2_publisher_send_error_e::LOAN_ERROR_EXCEEDS_MAX_LOAN_SIZE as c_int;
+    }
+
+    let sample_ptr = sample.payload_mut().as_mut_ptr();
+    core::ptr::copy_nonoverlapping(data_ptr, sample_ptr.cast(), size_of_element);
+    match sample.assume_init().send() {
+        Ok(v) => {
+            if !number_of_recipients.is_null() {
+                *number_of_recipients = v;
+            }
+        }
+        Err(e) => return e.into_c_int(),
+    }
+
+    IOX2_OK
+}
+
+unsafe fn send_slice_copy<S: Service>(
+    publisher: &Publisher<S, PayloadFfi, UserHeaderFfi>,
+    data_ptr: *const c_void,
+    size_of_element: usize,
+    alignment_of_element: usize,
+    number_of_elements: usize,
+    number_of_recipients: *mut usize,
+) -> c_int {
+    let mut sample = match publisher.loan_custom_payload(number_of_elements) {
+        Ok(sample) => sample,
+        Err(e) => return e.into_c_int(),
+    };
+
+    let data_len = (size_of_element * number_of_elements).next_multiple_of(alignment_of_element);
     if sample.payload().len() < data_len {
         return iox2_publisher_send_error_e::LOAN_ERROR_EXCEEDS_MAX_LOAN_SIZE as c_int;
     }
@@ -314,6 +346,41 @@ pub unsafe extern "C" fn iox2_publisher_id(
 
     (*storage_ptr).init(id, deleter);
     *id_handle_ptr = (*storage_ptr).as_handle();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn iox2_publisher_send_slice_copy(
+    publisher_handle: iox2_publisher_h_ref,
+    data_ptr: *const c_void,
+    size_of_element: usize,
+    alignment_of_element: usize,
+    number_of_elements: usize,
+    number_of_recipients: *mut usize,
+) -> c_int {
+    publisher_handle.assert_non_null();
+    debug_assert!(!data_ptr.is_null());
+    debug_assert!(size_of_element != 0);
+
+    let publisher = &mut *publisher_handle.as_type();
+
+    match publisher.service_type {
+        iox2_service_type_e::IPC => send_slice_copy(
+            &publisher.value.as_mut().ipc,
+            data_ptr,
+            size_of_element,
+            alignment_of_element,
+            number_of_elements,
+            number_of_recipients,
+        ),
+        iox2_service_type_e::LOCAL => send_slice_copy(
+            &publisher.value.as_mut().local,
+            data_ptr,
+            size_of_element,
+            alignment_of_element,
+            number_of_elements,
+            number_of_recipients,
+        ),
+    }
 }
 
 /// Sends a copy of the provided data via the publisher. The data must be copyable via `memcpy`.
