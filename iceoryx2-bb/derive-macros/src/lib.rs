@@ -135,16 +135,15 @@ pub fn as_static_string_derive(input: TokenStream) -> TokenStream {
                         }
                     })
                     .unwrap_or_else(|| {
-                        // Default to converting variant name to snake_case with spaces
                         let variant_str = variant_ident.to_string();
                         variant_str
                             .chars()
                             .enumerate()
-                            .map(|(i, c)| {
-                                if i > 0 && c.is_uppercase() {
-                                    format!(" {}", c.to_lowercase())
+                            .map(|(_, c)| {
+                                if c == '_' {
+                                    ' '
                                 } else {
-                                    c.to_lowercase().to_string()
+                                    c.to_ascii_lowercase()
                                 }
                             })
                             .collect::<String>()
