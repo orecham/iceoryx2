@@ -167,6 +167,34 @@ TYPED_TEST(WaitSetTest, interval_attachment_blocks_for_at_least_timeout) {
     ASSERT_THAT(elapsed, Ge(TIMEOUT.toMilliseconds()));
 }
 
+TYPED_TEST(WaitSetTest, interval_can_be_attached_then_detached_to_make_oneshot_timeout) {
+    auto sut = this->create_sut();
+
+    constexpr uint8_t NUM_ITERATIONS = 5;
+
+    for (auto i = 0; i < NUM_ITERATIONS; i++) {
+        auto begin = std::chrono::steady_clock::now();
+        auto guard = sut.attach_interval(TIMEOUT).expect("");
+
+        auto callback_called = false;
+        auto result = sut.wait_and_process([&](auto attachment_id) {
+            callback_called = true;
+            sut.stop();
+            ASSERT_THAT(attachment_id.has_event_from(guard), Eq(true));
+            ASSERT_THAT(attachment_id.has_missed_deadline(guard), Eq(false));
+        });
+
+        auto end = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+
+        ASSERT_FALSE(result.has_error());
+        std::cout << std::to_string(static_cast<uint8_t>(result.value())) << std::endl;
+
+        ASSERT_THAT(elapsed, Ge(TIMEOUT.toMilliseconds()));
+        ASSERT_THAT(callback_called, Eq(true));
+    }
+}
+
 TYPED_TEST(WaitSetTest, deadline_attachment_blocks_for_at_least_timeout) {
     auto sut = this->create_sut();
     auto listener = this->create_listener();
