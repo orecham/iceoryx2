@@ -15,16 +15,24 @@ use crate::DataStream;
 
 use iceoryx2::config::Config as IceoryxConfig;
 use iceoryx2::node::Node as IceoryxNode;
+use iceoryx2::port::publisher::Publisher as IceoryxPublisher;
 use iceoryx2::port::subscriber::Subscriber as IceoryxSubscriber;
 use iceoryx2::prelude::*;
 use iceoryx2::service::builder::CustomHeaderMarker;
 use iceoryx2::service::builder::CustomPayloadMarker;
+use iceoryx2::service::ipc::Service as IceoryxService;
+use iceoryx2::service::port_factory::publish_subscribe::PortFactory;
 use iceoryx2::service::service_id::ServiceId as IceoryxServiceId;
 use iceoryx2::service::static_config::messaging_pattern::MessagingPattern;
 use iceoryx2_bb_log::info;
 use iceoryx2_services_discovery::service_discovery::Tracker as IceoryxServiceTracker;
 
+use zenoh::handlers::FifoChannel;
+use zenoh::handlers::FifoChannelHandler;
 use zenoh::pubsub::Publisher as ZenohPublisher;
+use zenoh::pubsub::Subscriber as ZenohSubscriber;
+use zenoh::sample::Locality;
+use zenoh::sample::Sample;
 use zenoh::Session as ZenohSession;
 use zenoh::Wait;
 
@@ -35,7 +43,9 @@ pub struct Tunnel<'a> {
     iox_config: IceoryxConfig,
     iox_node: IceoryxNode<ipc::Service>,
     iox_tracker: IceoryxServiceTracker<ipc::Service>,
-    streams: HashMap<IceoryxServiceId, DataStream<'a>>,
+    // TODO: Better organization ...
+    outbound_streams: HashMap<IceoryxServiceId, DataStream<'a>>,
+    inbound_streams: HashMap<IceoryxServiceId, DataStream<'a>>,
 }
 
 impl<'a> Tunnel<'a> {
@@ -50,14 +60,16 @@ impl<'a> Tunnel<'a> {
             .unwrap();
         let iox_tracker = IceoryxServiceTracker::new();
 
-        let streams: HashMap<IceoryxServiceId, DataStream<'a>> = HashMap::new();
+        let outbound_streams: HashMap<IceoryxServiceId, DataStream<'a>> = HashMap::new();
+        let inbound_streams: HashMap<IceoryxServiceId, DataStream<'a>> = HashMap::new();
 
         Self {
             z_session,
             iox_config,
             iox_node,
             iox_tracker,
-            streams,
+            outbound_streams,
+            inbound_streams,
         }
     }
 
@@ -70,16 +82,12 @@ impl<'a> Tunnel<'a> {
     }
 
     pub fn propagate(&self) {
-        for (_id, stream) in &self.streams {
-            match stream {
-                DataStream::Outbound {
-                    iox_service_id,
-                    iox_subscriber: _,
-                    z_publisher: _,
-                } => {
-                    info!("PROPAGATING (outbound): {}", iox_service_id.as_str());
-                }
-            }
+        for (iox_service_id, stream) in &self.inbound_streams {
+            info!("PROPAGATING (inbound): {}", iox_service_id.as_str());
+            stream.propagate();
+        }
+        for (iox_service_id, stream) in &self.outbound_streams {
+            info!("PROPAGATING (outbound): {}", iox_service_id.as_str());
             stream.propagate();
         }
     }
@@ -89,12 +97,19 @@ impl<'a> Tunnel<'a> {
     }
 
     pub fn stream_ids(&self) -> Vec<String> {
-        self.streams
+        self.outbound_streams
             .iter()
             .map(|(id, _)| id.as_str().to_string())
             .collect()
     }
 
+    /// Discovers iceoryx2 services and creates corresponding streams to propagate data to zenoh.
+    ///
+    /// This method synchronizes with the iceoryx2 service tracker to find newly added services.
+    /// For each discovered publish-subscribe service, it creates an iceoryx2 subscriber and a
+    /// corresponding Zenoh publisher, then announces the service to the Zenoh network.
+    ///
+    /// The discovered services are stored in the internal streams collection for later propagation.
     fn iox_discovery(&mut self) {
         let (added, _removed) = self.iox_tracker.sync(&self.iox_config).unwrap();
 
@@ -110,44 +125,45 @@ impl<'a> Tunnel<'a> {
                     iox_service_details.static_details.name()
                 );
 
-                if !self.streams.contains_key(&iox_service_id) {
+                if !self.outbound_streams.contains_key(&iox_service_id) {
+                    let iox_service = Self::iox_create_service(&self.iox_node, iox_service_details);
+
+                    // Create Outbound Stream
                     let iox_subscriber =
-                        Self::iox_create_subscriber(&self.iox_node, iox_service_details);
+                        Self::iox_create_subscriber(&iox_service, iox_service_details);
                     let z_publisher =
                         Self::zenoh_create_publisher(&self.z_session, iox_service_details);
 
-                    Self::zenoh_announce_service(&self.z_session, iox_service_details);
-
-                    self.streams.insert(
+                    self.outbound_streams.insert(
                         iox_service_id.clone(),
-                        DataStream::new_outbound(&iox_service_id, iox_subscriber, z_publisher),
+                        DataStream::new_outbound(iox_subscriber, z_publisher),
                     );
+
+                    // Create Inbound Stream
+                    let iox_publisher =
+                        Self::iox_create_publisher(&iox_service, iox_service_details);
+                    let z_subscriber =
+                        Self::zenoh_create_subscriber(&self.z_session, iox_service_details);
+                    self.inbound_streams.insert(
+                        iox_service_id.clone(),
+                        DataStream::new_inbound(iox_publisher, z_subscriber),
+                    );
+
+                    // Announce Service to Zenoh
+                    Self::zenoh_announce_service(&self.z_session, iox_service_details);
                 } else {
-                    // TODO
+                    // Nothing to do.
                 }
             }
         }
     }
 
-    /// Creates an iceoryx2 subscriber for a given service.
-    ///
-    /// This method creates a subscriber for the specified iceoryx2 service using custom payload
-    /// and header markers. It sets up the necessary type details from the service details.
-    ///
-    /// # Arguments
-    ///
-    /// * `iox_node` - The iceoryx2 node used to build the service
-    /// * `iox_service_details` - The details of the service to subscribe to
-    ///
-    /// # Returns
-    ///
-    /// An iceoryx2 subscriber configured with custom payload and header markers
-    fn iox_create_subscriber(
+    fn iox_create_service(
         iox_node: &IceoryxNode<ipc::Service>,
         iox_service_details: &ServiceDetails<ipc::Service>,
-    ) -> IceoryxSubscriber<ipc::Service, [CustomPayloadMarker], CustomHeaderMarker> {
-        unsafe {
-            let iox_service = iox_node
+    ) -> PortFactory<IceoryxService, [CustomPayloadMarker], CustomHeaderMarker> {
+        let iox_service = unsafe {
+            iox_node
                 .service_builder(iox_service_details.static_details.name())
                 .publish_subscribe::<[CustomPayloadMarker]>()
                 .user_header::<CustomHeaderMarker>()
@@ -166,17 +182,55 @@ impl<'a> Tunnel<'a> {
                         .payload,
                 )
                 .open_or_create()
-                .unwrap();
+                .unwrap()
+        };
 
-            let iox_subscriber = iox_service.subscriber_builder().create().unwrap();
-            info!(
-                "NEW SUBSCRIBER (iceoryx2): {} [{}]",
-                iox_service_details.static_details.service_id().as_str(),
-                iox_service_details.static_details.name()
-            );
+        iox_service
+    }
 
-            iox_subscriber
-        }
+    fn iox_create_publisher(
+        iox_service: &PortFactory<IceoryxService, [CustomPayloadMarker], CustomHeaderMarker>,
+        iox_service_details: &ServiceDetails<ipc::Service>,
+    ) -> IceoryxPublisher<ipc::Service, [CustomPayloadMarker], CustomHeaderMarker> {
+        let iox_publisher = iox_service
+            .publisher_builder()
+            .allocation_strategy(AllocationStrategy::PowerOfTwo)
+            .create()
+            .unwrap();
+        info!(
+            "NEW PUBLISHER (iceoryx2): {} [{}]",
+            iox_service_details.static_details.service_id().as_str(),
+            iox_service_details.static_details.name()
+        );
+
+        iox_publisher
+    }
+
+    /// Creates an iceoryx2 subscriber for a given service.
+    ///
+    /// This method creates a subscriber for the specified iceoryx2 service using custom payload
+    /// and header markers. It sets up the necessary type details from the service details.
+    ///
+    /// # Arguments
+    ///
+    /// * `iox_node` - The iceoryx2 node used to build the service
+    /// * `iox_service_details` - The details of the service to subscribe to
+    ///
+    /// # Returns
+    ///
+    /// An iceoryx2 subscriber configured with custom payload and header markers
+    fn iox_create_subscriber(
+        iox_service: &PortFactory<IceoryxService, [CustomPayloadMarker], CustomHeaderMarker>,
+        iox_service_details: &ServiceDetails<ipc::Service>,
+    ) -> IceoryxSubscriber<ipc::Service, [CustomPayloadMarker], CustomHeaderMarker> {
+        let iox_subscriber = iox_service.subscriber_builder().create().unwrap();
+        info!(
+            "NEW SUBSCRIBER (iceoryx2): {} [{}]",
+            iox_service_details.static_details.service_id().as_str(),
+            iox_service_details.static_details.name()
+        );
+
+        iox_subscriber
     }
 
     /// Creates a Zenoh publisher for an iceoryx2 service.
@@ -197,10 +251,25 @@ impl<'a> Tunnel<'a> {
         iox_service_details: &ServiceDetails<ipc::Service>,
     ) -> ZenohPublisher<'a> {
         let z_key = keys::data_stream(iox_service_details.static_details.service_id());
-        let z_publisher = z_session.declare_publisher(z_key.clone()).wait().unwrap();
-        info!("NEW PUBLISHER (zenoh): {}", z_key);
+        info!("NEW PUBLISHER (zenoh): {}", z_key.clone());
+        let z_publisher = z_session.declare_publisher(z_key).wait().unwrap();
 
         z_publisher
+    }
+
+    fn zenoh_create_subscriber(
+        z_session: &ZenohSession,
+        iox_service_details: &ServiceDetails<ipc::Service>,
+    ) -> ZenohSubscriber<FifoChannelHandler<Sample>> {
+        let z_key = keys::data_stream(iox_service_details.static_details.service_id());
+        let z_subscriber = z_session
+            .declare_subscriber(z_key)
+            .with(FifoChannel::new(10))
+            .allowed_origin(Locality::Remote)
+            .wait()
+            .unwrap();
+
+        z_subscriber
     }
 
     /// Announces an iceoryx2 service to the Zenoh network.
