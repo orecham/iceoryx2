@@ -12,6 +12,8 @@
 
 use crate::keys;
 use crate::DataStream;
+use crate::InboundStream;
+use crate::OutboundStream;
 
 use iceoryx2::config::Config as IceoryxConfig;
 use iceoryx2::node::Node as IceoryxNode;
@@ -38,14 +40,20 @@ use zenoh::Wait;
 
 use std::collections::HashMap;
 
+//
+// The following should be grouped by id:
+//  - iox_service
+//  - inbound data stream
+//  - outbound data stream
+//
 pub struct Tunnel<'a> {
     z_session: ZenohSession,
     iox_config: IceoryxConfig,
     iox_node: IceoryxNode<ipc::Service>,
     iox_tracker: IceoryxServiceTracker<ipc::Service>,
     // TODO: Better organization ...
-    outbound_streams: HashMap<IceoryxServiceId, DataStream<'a>>,
-    inbound_streams: HashMap<IceoryxServiceId, DataStream<'a>>,
+    outbound_streams: HashMap<IceoryxServiceId, OutboundStream<'a>>,
+    inbound_streams: HashMap<IceoryxServiceId, InboundStream>,
 }
 
 impl<'a> Tunnel<'a> {
@@ -60,8 +68,8 @@ impl<'a> Tunnel<'a> {
             .unwrap();
         let iox_tracker = IceoryxServiceTracker::new();
 
-        let outbound_streams: HashMap<IceoryxServiceId, DataStream<'a>> = HashMap::new();
-        let inbound_streams: HashMap<IceoryxServiceId, DataStream<'a>> = HashMap::new();
+        let outbound_streams: HashMap<IceoryxServiceId, OutboundStream<'a>> = HashMap::new();
+        let inbound_streams: HashMap<IceoryxServiceId, InboundStream> = HashMap::new();
 
         Self {
             z_session,
@@ -136,7 +144,7 @@ impl<'a> Tunnel<'a> {
 
                     self.outbound_streams.insert(
                         iox_service_id.clone(),
-                        DataStream::new_outbound(iox_subscriber, z_publisher),
+                        OutboundStream::new(iox_subscriber, z_publisher),
                     );
 
                     // Create Inbound Stream
@@ -146,7 +154,7 @@ impl<'a> Tunnel<'a> {
                         Self::zenoh_create_subscriber(&self.z_session, iox_service_details);
                     self.inbound_streams.insert(
                         iox_service_id.clone(),
-                        DataStream::new_inbound(iox_publisher, z_subscriber),
+                        InboundStream::new(iox_publisher, z_subscriber),
                     );
 
                     // Announce Service to Zenoh
