@@ -288,7 +288,7 @@ mod zenoh_tunnel {
             }
 
             // wait a short time before retrying
-            std::thread::sleep(Duration::from_millis(50));
+            std::thread::sleep(Duration::from_millis(100));
         }
         if received_sample.is_none() {
             test_fail!("failed to receive sample from remote host after 3 propagation attempts");
@@ -337,7 +337,7 @@ mod zenoh_tunnel {
             .get(keys::service(iox_service.service_id()))
             .wait()
             .unwrap();
-        match z_reply.recv_timeout(Duration::from_millis(500)) {
+        match z_reply.recv_timeout(Duration::from_millis(100)) {
             Ok(Some(reply)) => match reply.result() {
                 Ok(sample) => {
                     let iox_static_details: StaticConfig =
