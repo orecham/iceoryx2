@@ -48,11 +48,11 @@ impl<ServiceType: iceoryx2::service::Service> ZenohDiscovery<'_, ServiceType> {
         // Make query immediately - replies processed in first `discover()` call
         let z_query = z_querier.get().wait().map_err(|_e| CreationError::Error)?;
 
-        return Ok(Self {
+        Ok(Self {
             z_querier,
             z_query,
             _phantom: core::marker::PhantomData,
-        });
+        })
     }
 }
 
