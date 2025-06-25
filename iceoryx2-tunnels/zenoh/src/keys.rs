@@ -30,3 +30,8 @@ pub fn publish_subscribe(service_id: &ServiceId) -> String {
 pub fn event(service_id: &ServiceId) -> String {
     format!("iox2/services/{}/event", service_id.as_str())
 }
+
+/// The zenoh key at which payloads for the given service id can be received.
+pub fn request_response(service_id: &ServiceId) -> String {
+    format!("iox2/services/{}/request_response", service_id.as_str())
+}

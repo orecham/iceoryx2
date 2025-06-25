@@ -16,15 +16,20 @@ pub mod keys;
 mod tunnel;
 
 pub(crate) use connection::*;
+use iceoryx2::service::builder::request_response::RequestResponseOpenOrCreateError;
+use iceoryx2::service::port_factory::client::ClientCreateError;
+use iceoryx2::service::port_factory::server::ServerCreateError;
 pub use tunnel::*;
 
 use iceoryx2::node::Node as IceoryxNode;
+use iceoryx2::port::client::Client as IceoryxClient;
 use iceoryx2::port::listener::Listener as IceoryxListener;
 use iceoryx2::port::listener::ListenerCreateError;
 use iceoryx2::port::notifier::Notifier as IceoryxNotifier;
 use iceoryx2::port::notifier::NotifierCreateError;
 use iceoryx2::port::publisher::Publisher as IceoryxPublisher;
 use iceoryx2::port::publisher::PublisherCreateError;
+use iceoryx2::port::server::Server as IceoryxServer;
 use iceoryx2::port::subscriber::Subscriber as IceoryxSubscriber;
 use iceoryx2::port::subscriber::SubscriberCreateError;
 use iceoryx2::prelude::AllocationStrategy;
@@ -34,6 +39,7 @@ use iceoryx2::service::builder::CustomHeaderMarker;
 use iceoryx2::service::builder::CustomPayloadMarker;
 use iceoryx2::service::port_factory::event::PortFactory as IceoryxEventService;
 use iceoryx2::service::port_factory::publish_subscribe::PortFactory as IceoryxPublishSubscribeService;
+use iceoryx2::service::port_factory::request_response::PortFactory as IceoryxRequestResponseService;
 use iceoryx2::service::static_config::StaticConfig as IceoryxServiceConfig;
 use iceoryx2_bb_log::error;
 use iceoryx2_bb_log::info;
@@ -43,6 +49,9 @@ use zenoh::handlers::FifoChannelHandler;
 use zenoh::pubsub::Publisher as ZenohPublisher;
 use zenoh::pubsub::Subscriber as ZenohSubscriber;
 use zenoh::qos::Reliability;
+use zenoh::query::Querier as ZenohQuerier;
+use zenoh::query::Query;
+use zenoh::query::Queryable as ZenohQueryable;
 use zenoh::sample::Locality;
 use zenoh::sample::Sample;
 use zenoh::Session as ZenohSession;
@@ -93,6 +102,73 @@ pub(crate) fn iox_create_event_service<ServiceType: iceoryx2::service::Service>(
         .service_builder(iox_service_config.name())
         .event()
         .open_or_create()?;
+
+    Ok(iox_service)
+}
+
+/// Creates an iceoryx2 request-response service matching the provided service configuration.
+pub(crate) fn iox_create_request_response_service<ServiceType: iceoryx2::service::Service>(
+    iox_node: &IceoryxNode<ServiceType>,
+    iox_service_config: &IceoryxServiceConfig,
+) -> Result<
+    IceoryxRequestResponseService<
+        ServiceType,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+    >,
+    RequestResponseOpenOrCreateError,
+> {
+    let iox_request_response_config = iox_service_config.request_response();
+    let iox_service = unsafe {
+        iox_node
+            .service_builder(iox_service_config.name())
+            .request_response::<[CustomPayloadMarker], [CustomPayloadMarker]>()
+            .request_user_header::<CustomHeaderMarker>()
+            .response_user_header::<CustomHeaderMarker>()
+            .__internal_set_request_header_type_details(
+                &iox_request_response_config
+                    .request_message_type_details()
+                    .user_header,
+            )
+            .__internal_set_request_payload_type_details(
+                &iox_request_response_config
+                    .request_message_type_details()
+                    .payload,
+            )
+            .__internal_set_response_header_type_details(
+                &iox_request_response_config
+                    .response_message_type_details()
+                    .user_header,
+            )
+            .__internal_set_response_payload_type_details(
+                &iox_request_response_config
+                    .response_message_type_details()
+                    .payload,
+            )
+            .enable_safe_overflow_for_requests(
+                iox_request_response_config.has_safe_overflow_for_requests(),
+            )
+            .enable_safe_overflow_for_responses(
+                iox_request_response_config.has_safe_overflow_for_responses(),
+            )
+            .enable_fire_and_forget_requests(
+                iox_request_response_config.does_support_fire_and_forget_requests(),
+            )
+            .max_nodes(iox_request_response_config.max_nodes())
+            .max_servers(iox_request_response_config.max_servers())
+            .max_clients(iox_request_response_config.max_clients())
+            .max_loaned_requests(iox_request_response_config.max_loaned_requests())
+            .max_active_requests_per_client(
+                iox_request_response_config.max_active_requests_per_client(),
+            )
+            .max_borrowed_responses_per_pending_response(
+                iox_request_response_config.max_borrowed_responses_per_pending_response(),
+            )
+            .max_response_buffer_size(iox_request_response_config.max_response_buffer_size())
+            .open_or_create()?
+    };
 
     Ok(iox_service)
 }
@@ -180,6 +256,66 @@ pub(crate) fn iox_create_listener<ServiceType: iceoryx2::service::Service>(
     Ok(iox_listener)
 }
 
+pub(crate) fn iox_create_server<ServiceType: iceoryx2::service::Service>(
+    iox_request_response_service: &IceoryxRequestResponseService<
+        ServiceType,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+    >,
+    iox_service_config: &IceoryxServiceConfig,
+) -> Result<
+    IceoryxServer<
+        ServiceType,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+    >,
+    ServerCreateError,
+> {
+    let iox_server = iox_request_response_service.server_builder().create()?;
+
+    info!(
+        "CREATED(iceoryx): Server {} [{}]",
+        iox_service_config.service_id().as_str(),
+        iox_service_config.name()
+    );
+
+    Ok(iox_server)
+}
+
+pub(crate) fn iox_create_client<ServiceType: iceoryx2::service::Service>(
+    iox_request_response_service: &IceoryxRequestResponseService<
+        ServiceType,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+    >,
+    iox_service_config: &IceoryxServiceConfig,
+) -> Result<
+    IceoryxClient<
+        ServiceType,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+        [CustomPayloadMarker],
+        CustomHeaderMarker,
+    >,
+    ClientCreateError,
+> {
+    let iox_client = iox_request_response_service.client_builder().create()?;
+
+    info!(
+        "CREATED(iceoryx): Server {} [{}]",
+        iox_service_config.service_id().as_str(),
+        iox_service_config.name()
+    );
+
+    Ok(iox_client)
+}
+
 /// Creates a Zenoh publisher to send payloads from iceoryx2 services to remote hosts.
 pub(crate) fn z_create_publisher<'a>(
     z_session: &ZenohSession,
@@ -234,6 +370,7 @@ pub(crate) fn z_create_notifier<'a>(
         .allowed_destination(Locality::Remote)
         .reliability(Reliability::Reliable)
         .wait()?;
+
     info!(
         "CREATED(zenoh): Notifier {} [{}]",
         z_key,
@@ -257,6 +394,7 @@ pub(crate) fn z_create_listener(
         .with(FifoChannel::new(10))
         .allowed_origin(Locality::Remote)
         .wait()?;
+
     info!(
         "CREATED(zenoh): Listener {} [{}]",
         z_key,
@@ -264,6 +402,47 @@ pub(crate) fn z_create_listener(
     );
 
     Ok(z_listener)
+}
+
+pub(crate) fn z_create_server(
+    z_session: &ZenohSession,
+    iox_service_config: &IceoryxServiceConfig,
+) -> Result<ZenohQueryable<FifoChannelHandler<Query>>, zenoh::Error> {
+    let z_key = keys::request_response(iox_service_config.service_id());
+
+    let z_server = z_session
+        .declare_queryable(z_key.clone())
+        .with(FifoChannel::new(10))
+        .allowed_origin(Locality::Remote)
+        .wait()?;
+
+    info!(
+        "CREATED(zenoh): Server {} [{}]",
+        z_key,
+        iox_service_config.name()
+    );
+
+    Ok(z_server)
+}
+
+pub(crate) fn z_create_client<'a>(
+    z_session: &ZenohSession,
+    iox_service_config: &IceoryxServiceConfig,
+) -> Result<ZenohQuerier<'a>, zenoh::Error> {
+    let z_key = keys::request_response(iox_service_config.service_id());
+
+    let z_client = z_session
+        .declare_querier(z_key.clone())
+        .allowed_destination(Locality::Remote)
+        .wait()?;
+
+    info!(
+        "CREATED(zenoh): Client {} [{}]",
+        z_key,
+        iox_service_config.name()
+    );
+
+    Ok(z_client)
 }
 
 /// Announces an iceoryx service over Zenoh to make it discoverable by remote hosts.

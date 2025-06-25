@@ -13,9 +13,13 @@
 use crate::discovery::Discovery;
 use crate::discovery::IceoryxDiscovery;
 use crate::discovery::ZenohDiscovery;
+use crate::iox_create_request_response_service;
+use crate::z_announce_service;
 use crate::BidirectionalEventConnection;
 use crate::BidirectionalPublishSubscribeConnection;
+use crate::ClientTunnel;
 use crate::Connection;
+use crate::ServerTunnel;
 
 use iceoryx2::config::Config as IceoryxConfig;
 use iceoryx2::node::Node as IceoryxNode;
@@ -31,6 +35,7 @@ use zenoh::Session as ZenohSession;
 use zenoh::Wait;
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Default)]
 pub struct TunnelConfig {
@@ -76,6 +81,16 @@ pub enum Scope {
     Both,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum TunneledPort {
+    Publisher(String),
+    Subscriber(String),
+    Notifier(String),
+    Listener(String),
+    Server(String),
+    Client(String),
+}
+
 impl core::fmt::Display for Scope {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -92,9 +107,14 @@ pub struct Tunnel<'a, ServiceType: iceoryx2::service::Service> {
     z_discovery: ZenohDiscovery<'a, ServiceType>,
     iox_node: IceoryxNode<ServiceType>,
     iox_discovery: IceoryxDiscovery<ServiceType>,
+    // TODO(cleanliness): Rename these to be consistent with client/server
+    // TODO(cleanliness): Consider scrapping coupling via bidirectional connection
     publish_subscribe_connectons:
         HashMap<IceoryxServiceId, BidirectionalPublishSubscribeConnection<'a, ServiceType>>,
     event_connections: HashMap<IceoryxServiceId, BidirectionalEventConnection<'a, ServiceType>>,
+
+    client_tunnels: HashMap<IceoryxServiceId, ClientTunnel<'a, ServiceType>>,
+    server_tunnels: HashMap<IceoryxServiceId, ServerTunnel<ServiceType>>,
 }
 
 impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
@@ -137,6 +157,9 @@ impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
         let event_connections: HashMap<IceoryxServiceId, BidirectionalEventConnection<Service>> =
             HashMap::new();
 
+        let client_tunnels: HashMap<IceoryxServiceId, ClientTunnel<Service>> = HashMap::new();
+        let server_tunnels: HashMap<IceoryxServiceId, ServerTunnel<Service>> = HashMap::new();
+
         Ok(Self {
             z_session,
             z_discovery,
@@ -144,6 +167,8 @@ impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
             iox_discovery,
             publish_subscribe_connectons,
             event_connections,
+            client_tunnels,
+            server_tunnels,
         })
     }
 
@@ -168,6 +193,8 @@ impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
                         &self.z_session,
                         &mut self.publish_subscribe_connectons,
                         &mut self.event_connections,
+                        &mut self.client_tunnels,
+                        &mut self.server_tunnels,
                     )
                 })
                 .map_err(|_e| DiscoveryError::Error)?;
@@ -183,6 +210,8 @@ impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
                         &self.z_session,
                         &mut self.publish_subscribe_connectons,
                         &mut self.event_connections,
+                        &mut self.client_tunnels,
+                        &mut self.server_tunnels,
                     )
                 })
                 .map_err(|_e| DiscoveryError::Error)?;
@@ -207,21 +236,39 @@ impl<Service: iceoryx2::service::Service> Tunnel<'_, Service> {
         }
     }
 
+    // TODO(cleanliness): remove in favor of tunneled_ports()
     /// Returns a list of all service IDs that are currently being tunneled.
     ///
     /// # Returns
     ///
     /// * `Vec<String>` - A vector containing the string representation of all service IDs
     ///   that are currently being tunneled through this tunnel instance.
-    pub fn tunneled_services(&self) -> Vec<String> {
+    pub fn tunneled_services(&self) -> HashSet<String> {
         self.publish_subscribe_connectons
             .keys()
             .chain(self.event_connections.keys())
+            .chain(self.server_tunnels.keys())
+            .chain(self.client_tunnels.keys())
             .map(|id| id.as_str().to_string())
             .collect()
     }
+
+    pub fn tunneled_ports(&self) -> Vec<TunneledPort> {
+        let mut ports = Vec::new();
+
+        for id in self.server_tunnels.keys() {
+            ports.push(TunneledPort::Server(id.as_str().to_string()));
+        }
+
+        for id in self.client_tunnels.keys() {
+            ports.push(TunneledPort::Client(id.as_str().to_string()));
+        }
+
+        ports
+    }
 }
 
+// TODO(correctness): Proper error handling and clean-up in error cases
 /// Process a discovered service and create appropriate connections.
 ///
 /// # Arguments
@@ -249,6 +296,9 @@ fn on_discovery<'a, ServiceType: iceoryx2::service::Service>(
         IceoryxServiceId,
         BidirectionalEventConnection<'a, ServiceType>,
     >,
+
+    client_tunnels: &mut HashMap<IceoryxServiceId, ClientTunnel<'a, ServiceType>>,
+    server_tunnels: &mut HashMap<IceoryxServiceId, ServerTunnel<ServiceType>>,
 ) {
     let iox_service_id = iox_service_config.service_id();
     match iox_service_config.messaging_pattern() {
@@ -285,6 +335,38 @@ fn on_discovery<'a, ServiceType: iceoryx2::service::Service>(
                         .unwrap();
 
                 event_connections.insert(iox_service_id.clone(), connection);
+            }
+        }
+        MessagingPattern::RequestResponse(_) => {
+            let needs_client = !client_tunnels.contains_key(iox_service_id);
+            let needs_server = !server_tunnels.contains_key(iox_service_id);
+
+            if needs_client || needs_server {
+                let iox_service =
+                    iox_create_request_response_service(iox_node, iox_service_config).unwrap();
+
+                if needs_client {
+                    let client_tunnel = ClientTunnel::create(
+                        iox_node.id(),
+                        iox_service_config,
+                        &iox_service,
+                        z_session,
+                    )
+                    .unwrap();
+                    client_tunnels.insert(iox_service_id.clone(), client_tunnel);
+                }
+                if needs_server {
+                    let server_tunnel = ServerTunnel::create(
+                        iox_node.id(),
+                        iox_service_config,
+                        &iox_service,
+                        z_session,
+                    )
+                    .unwrap();
+                    server_tunnels.insert(iox_service_id.clone(), server_tunnel);
+                }
+
+                z_announce_service(z_session, iox_service_config).unwrap();
             }
         }
         _ => { /* Not supported. Nothing to do. */ }

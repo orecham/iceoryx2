@@ -12,9 +12,11 @@
 
 mod event;
 mod publish_subscribe;
+mod request_response;
 
 pub use event::*;
 pub use publish_subscribe::*;
+pub use request_response::*;
 
 // TODO: More granularity in errors
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
