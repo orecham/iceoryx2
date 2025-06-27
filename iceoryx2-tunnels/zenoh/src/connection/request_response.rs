@@ -10,6 +10,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use super::Connection;
+use super::PropagationError;
+use crate::iox_create_client;
+use crate::iox_create_server;
+use crate::z_create_client;
+use crate::z_create_server;
+
 use iceoryx2::node::NodeId as IceoryxNodeId;
 use iceoryx2::port::client::Client as IceoryxClient;
 use iceoryx2::port::server::Server as IceoryxServer;
@@ -18,18 +25,14 @@ use iceoryx2::service::builder::CustomPayloadMarker;
 use iceoryx2::service::port_factory::request_response::PortFactory as IceoryxRequestResponseService;
 use iceoryx2::service::static_config::StaticConfig as IceoryxServiceConfig;
 
+use iceoryx2_bb_log::error;
+use zenoh::bytes::ZBytes;
 use zenoh::handlers::FifoChannelHandler;
 use zenoh::query::Querier as ZenohQuerier;
 use zenoh::query::Query;
 use zenoh::query::Queryable as ZenohQueryable;
 use zenoh::Session as ZenohSession;
-
-use crate::iox_create_client;
-use crate::iox_create_server;
-use crate::z_create_client;
-use crate::z_create_server;
-
-use super::Connection;
+use zenoh::Wait;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum CreationError {
@@ -87,7 +90,48 @@ impl<ServiceType: iceoryx2::service::Service> ClientTunnel<'_, ServiceType> {
 }
 
 impl<ServiceType: iceoryx2::service::Service> Connection for ClientTunnel<'_, ServiceType> {
-    fn propagate(&self) -> Result<(), super::PropagationError> {
+    fn propagate(&self) -> Result<(), PropagationError> {
+        loop {
+            match unsafe { self.iox_server.receive_custom_payload() } {
+                Ok(Some(request)) => {
+                    let ptr = request.payload().as_ptr() as *const u8;
+                    let len = request.len();
+                    let bytes = unsafe { core::slice::from_raw_parts(ptr, len) };
+
+                    let iox_response_type_details = self
+                        .iox_service_config
+                        .request_response()
+                        .response_message_type_details();
+                    let iox_payload_size = iox_response_type_details.payload.size;
+                    let _iox_payload_alignment = iox_response_type_details.payload.alignment;
+
+                    // TODO(optimization): Is it possible to create the ZBytes struct without copy?
+                    let z_payload = ZBytes::from(bytes);
+                    self.z_client
+                        .get()
+                        .payload(z_payload)
+                        .callback(|z_reply| {
+                            match z_reply.result() {
+                                Ok(payload) => {
+                                    let number_of_elements = z_payload.len() / iox_payload_size;
+                                    unsafe {
+                                        request.loan_custom_payload(number_of_elements);
+                                    }
+                                }
+                                Err(_) => todo!(),
+                            };
+                        })
+                        .wait()
+                        .unwrap();
+                }
+                Ok(None) => break, // No more requests to propagate
+                Err(e) => {
+                    error!("Failed to receive custom payload from iceoryx: {}", e);
+                    return Err(PropagationError::Error);
+                }
+            }
+        }
+
         Ok(())
     }
 }

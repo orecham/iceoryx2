@@ -20,6 +20,7 @@ mod zenoh_tunnel_request_response {
     use iceoryx2::prelude::*;
     use iceoryx2::service::static_config::StaticConfig;
     use iceoryx2::testing::*;
+    use iceoryx2_bb_container::byte_string::FixedSizeByteString;
     use iceoryx2_bb_posix::unique_system_id::UniqueSystemId;
     use iceoryx2_bb_testing::{assert_that, test_fail};
     use iceoryx2_services_discovery::service_discovery::Config as DiscoveryConfig;
@@ -62,7 +63,7 @@ mod zenoh_tunnel_request_response {
         };
 
         let mut tunnel = Tunnel::<S>::create(&tunnel_config, &iox_config, &z_config_a).unwrap();
-        assert_that!(tunnel.tunneled_services().len(), eq 0);
+        assert_that!(tunnel.tunneled_ports().len(), eq 0);
 
         // Service
         let iox_node = NodeBuilder::new()
@@ -108,7 +109,7 @@ mod zenoh_tunnel_request_response {
         let iox_config = generate_isolated_config();
         let tunnel_config = TunnelConfig::default();
         let mut tunnel = Tunnel::<S>::create(&tunnel_config, &iox_config, &z_config).unwrap();
-        assert_that!(tunnel.tunneled_services().len(), eq 0);
+        assert_that!(tunnel.tunneled_ports().len(), eq 0);
 
         // Service
         let iox_node = NodeBuilder::new()
@@ -198,6 +199,120 @@ mod zenoh_tunnel_request_response {
             Ok(None) => test_fail!("no reply to type details query"),
             Err(e) => test_fail!("error querying message type details from zenoh: {}", e),
         }
+    }
+
+    fn propagates_n_requests<
+        S: Service,
+        RequestPayload: ZeroCopySend + core::fmt::Debug,
+        ResponsePayload: ZeroCopySend + core::fmt::Debug,
+    >(
+        num_request: usize,
+        generate_request: impl Fn(usize) -> RequestPayload,
+        num_responses: usize,
+        generate_response: impl Fn(&mut RequestPayload, usize) -> ResponsePayload,
+    ) {
+        // ==================== SETUP ====================
+
+        // [[ COMMON ]]
+        let iox_service_name = mock_service_name();
+
+        // [[ HOST A ]]
+        // Tunnel
+        let z_config_a = zenoh::Config::default();
+        let iox_config_a = generate_isolated_config();
+        let tunnel_config_a = TunnelConfig::default();
+        let mut tunnel_a =
+            Tunnel::<S>::create(&tunnel_config_a, &iox_config_a, &z_config_a).unwrap();
+        assert_that!(tunnel_a.tunneled_ports().len(), eq 0);
+
+        // Client
+        let iox_node_a = NodeBuilder::new()
+            .config(&iox_config_a)
+            .create::<S>()
+            .unwrap();
+        let iox_service_a = iox_node_a
+            .service_builder(&iox_service_name)
+            .request_response::<RequestPayload, ResponsePayload>()
+            .open_or_create()
+            .unwrap();
+        let iox_client_a = iox_service_a.client_builder().create().unwrap();
+
+        // Discover
+        tunnel_a.discover(Scope::Iceoryx).unwrap();
+        assert_that!(
+            tunnel_a.tunneled_ports().contains(&TunneledPort::Client(String::from(iox_service_a.service_id().as_str()))),
+            eq true
+        );
+
+        // [[ HOST B ]]
+        // Tunnel
+        let z_config_b = zenoh::Config::default();
+        let iox_config_b = generate_isolated_config();
+        let tunnel_config_b = TunnelConfig::default();
+        let mut tunnel_b =
+            Tunnel::<S>::create(&tunnel_config_b, &iox_config_b, &z_config_b).unwrap();
+        assert_that!(tunnel_b.tunneled_ports().len(), eq 0);
+
+        // Server
+        let iox_node_b = NodeBuilder::new()
+            .config(&iox_config_b)
+            .create::<S>()
+            .unwrap();
+        let iox_service_b = iox_node_b
+            .service_builder(&iox_service_name)
+            .request_response::<RequestPayload, ResponsePayload>()
+            .open_or_create()
+            .unwrap();
+        let iox_server_b = iox_service_b.server_builder().create().unwrap();
+
+        // Discover
+        tunnel_b.discover(Scope::Iceoryx).unwrap();
+        assert_that!(
+            tunnel_b.tunneled_ports().contains(&TunneledPort::Server(String::from(iox_service_b.service_id().as_str()))),
+            eq true
+        );
+        assert_that!(iox_service_a.service_id().as_str(), eq iox_service_b.service_id().as_str());
+
+        // ==================== TEST =====================
+        for request_idx in 0..num_request {
+            iox_client_a
+                .send_copy(generate_request(request_idx))
+                .unwrap();
+
+            tunnel_b.propagate(); // Goes to Zenoh
+            tunnel_b.propagate(); // Comes from Zenoh
+
+            assert_that!(iox_server_b.has_requests().unwrap(), eq true);
+        }
+    }
+
+    #[test]
+    fn propagates_one_struct_request_one_struct_response<S: Service>() {
+        #[derive(Debug, Default, Eq, PartialEq, ZeroCopySend)]
+        #[repr(C)]
+        struct MyRequest {
+            id: usize,
+            data: FixedSizeByteString<128>,
+        }
+        #[derive(Debug, Default, Eq, PartialEq, ZeroCopySend)]
+        #[repr(C)]
+        struct MyResponse {
+            status: bool,
+            message: FixedSizeByteString<128>,
+        }
+
+        propagates_n_requests::<S, MyRequest, MyResponse>(
+            1,
+            |_| MyRequest {
+                id: 0,
+                data: "Hello".try_into().unwrap(),
+            },
+            1,
+            |_, _| MyResponse {
+                status: true,
+                message: "World".try_into().unwrap(),
+            },
+        );
     }
 
     #[instantiate_tests(<iceoryx2::service::ipc::Service>)]
