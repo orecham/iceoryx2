@@ -217,8 +217,8 @@ use core::{
     cell::RefCell, fmt::Debug, hash::Hash, marker::PhantomData, sync::atomic::Ordering,
     time::Duration,
 };
-use std::collections::HashMap;
 
+use iceoryx2_bb_compatability::collections::HashMap;
 use iceoryx2_bb_elementary::CallbackProgression;
 use iceoryx2_bb_log::fail;
 use iceoryx2_bb_posix::{

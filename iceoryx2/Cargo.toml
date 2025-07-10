@@ -12,6 +12,9 @@ rust-version = { workspace = true }
 version = { workspace = true }
 
 [features]
+default = ["std"]
+std = ["iceoryx2-bb-compatability/std"]
+
 # Enables https://crates.io/crates/log as default logger
 logger_log = ["iceoryx2-bb-log/logger_log"]
 # Enables https://crates.io/crates/tracing as default logger
@@ -28,6 +31,7 @@ dev_permissions = ["iceoryx2-cal/dev_permissions"]
 libc_platform = ["iceoryx2-bb-posix/libc_platform"]
 
 [dependencies]
+iceoryx2-bb-compatability = { workspace = true }
 iceoryx2-bb-container = { workspace = true }
 iceoryx2-bb-derive-macros = { workspace = true }
 iceoryx2-bb-system-types = { workspace = true }

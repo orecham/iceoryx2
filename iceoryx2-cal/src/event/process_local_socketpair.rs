@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use core::time::Duration;
+use iceoryx2_bb_compatability::collections::HashMap;
 pub use iceoryx2_bb_container::semantic_string::SemanticString;
 use iceoryx2_bb_log::{debug, fail, fatal_panic};
 use iceoryx2_bb_posix::{
@@ -24,7 +25,6 @@ use iceoryx2_bb_posix::{
 };
 pub use iceoryx2_bb_system_types::{file_name::FileName, file_path::FilePath, path::Path};
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
 
 use crate::named_concept::{
     NamedConceptConfiguration, NamedConceptDoesExistError, NamedConceptListError,
