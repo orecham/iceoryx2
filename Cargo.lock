@@ -1281,6 +1281,7 @@ name = "iceoryx2-bb-compatability"
 version = "0.6.1"
 dependencies = [
  "hashbrown 0.15.2",
+ "once_cell",
  "spin",
 ]
 
@@ -1466,7 +1467,6 @@ dependencies = [
  "iceoryx2-pal-posix",
  "iceoryx2-pal-testing",
  "lazy_static",
- "once_cell",
  "serde",
  "sha1_smol",
  "tiny-fn",

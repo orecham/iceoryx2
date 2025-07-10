@@ -21,9 +21,10 @@ pub mod collections {
 
 #[cfg(feature = "std")]
 pub mod sync {
+    pub use once_cell::sync::Lazy;
     pub use std::sync::{Mutex, MutexGuard};
 }
 #[cfg(not(feature = "std"))]
 pub mod sync {
-    pub use spin::{Mutex, MutexGuard};
+    pub use spin::{Lazy, Mutex, MutexGuard};
 }

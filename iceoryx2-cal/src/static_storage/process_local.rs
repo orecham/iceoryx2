@@ -45,12 +45,11 @@ use alloc::sync::Arc;
 use core::sync::atomic::Ordering;
 
 use iceoryx2_bb_compatability::collections::HashMap;
+use iceoryx2_bb_compatability::sync::Lazy;
 use iceoryx2_bb_log::{fail, fatal_panic};
 use iceoryx2_bb_posix::adaptive_wait::AdaptiveWaitBuilder;
 use iceoryx2_bb_posix::mutex::*;
 use iceoryx2_pal_concurrency_sync::iox_atomic::IoxAtomicBool;
-
-use once_cell::sync::Lazy;
 
 #[derive(Debug)]
 struct StorageContent {

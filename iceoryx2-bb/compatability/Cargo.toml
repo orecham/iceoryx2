@@ -14,8 +14,9 @@ version = { workspace = true }
 
 [features]
 default = ["std"]
-std = []
+std = ["once_cell/std"]
 
 [dependencies]
 hashbrown = { workspace = true }
+once_cell = { workspace = true }
 spin = { workspace = true }
