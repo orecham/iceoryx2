@@ -157,11 +157,15 @@ use crate::service::{
 };
 use crate::signal_handling_mode::SignalHandlingMode;
 use crate::{config::Config, service::config_scheme::node_details_config};
+
+use alloc::sync::Arc;
 use core::cell::UnsafeCell;
 use core::marker::PhantomData;
 use core::sync::atomic::Ordering;
 use core::time::Duration;
+
 use iceoryx2_bb_compatability::collections::HashMap;
+use iceoryx2_bb_compatability::sync::Mutex;
 use iceoryx2_bb_container::semantic_string::SemanticString;
 use iceoryx2_bb_derive_macros::ZeroCopySend;
 use iceoryx2_bb_elementary::CallbackProgression;
@@ -178,10 +182,6 @@ use iceoryx2_cal::{
     monitoring::*, named_concept::NamedConceptListError, serialize::*, static_storage::*,
 };
 use iceoryx2_pal_concurrency_sync::iox_atomic::IoxAtomicBool;
-
-use alloc::sync::Arc;
-
-use std::sync::Mutex;
 
 /// The system-wide unique id of a [`Node`]
 #[derive(

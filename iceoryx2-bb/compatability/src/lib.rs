@@ -14,8 +14,16 @@
 pub mod collections {
     pub use std::collections::{HashMap, HashSet};
 }
-
 #[cfg(not(feature = "std"))]
 pub mod collections {
     pub use hashbrown::{HashMap, HashSet};
+}
+
+#[cfg(feature = "std")]
+pub mod sync {
+    pub use std::sync::{Mutex, MutexGuard};
+}
+#[cfg(not(feature = "std"))]
+pub mod sync {
+    pub use spin::{Mutex, MutexGuard};
 }

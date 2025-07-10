@@ -11,6 +11,11 @@ rust-version = { workspace = true }
 version = { workspace = true }
 
 [features]
+default = ["std"]
+std = [
+  "iceoryx2-bb-compatability/std",
+]
+
 # The permissions of all resources will be set to read, write, execute for everyone.
 # This shall not be used in production and is meant to be enabled in a docker environment
 # with inconsistent user configuration.

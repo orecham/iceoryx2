@@ -13,7 +13,10 @@ version = { workspace = true }
 
 [features]
 default = ["std"]
-std = ["iceoryx2-bb-compatability/std"]
+std = [
+  "iceoryx2-bb-compatability/std",
+  "iceoryx2-cal/std"
+]
 
 # Enables https://crates.io/crates/log as default logger
 logger_log = ["iceoryx2-bb-log/logger_log"]

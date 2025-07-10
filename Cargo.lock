@@ -1281,6 +1281,7 @@ name = "iceoryx2-bb-compatability"
 version = "0.6.1"
 dependencies = [
  "hashbrown 0.15.2",
+ "spin",
 ]
 
 [[package]]
