@@ -100,14 +100,14 @@ colored = { version = "2.1" }
 generic-tests = { version = "0.1.2" }
 hashbrown = { version = "0.15" }
 human-panic = { version = "2.0.2" }
-lazy_static = { version = "1.4.0" }
+lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 libc = { version = "0.2.169" }
 log = { version = "0.4.21" }
 once_cell = { version = "1.19.0", default-features = false, features = ["alloc"] }
 proc-macro2 = { version = "1.0.84" }
 quote = { version = "1.0.36" }
 ron = { version = "0.8" }
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.203", default-features = false, features = ["alloc","derive"] }
 serde_yaml = { version = "0.9.34" }
 serde_json = { version = "1.0" }
 serde_test = { version = "1.0.176" }
