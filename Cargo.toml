@@ -4,6 +4,7 @@ members = [
     "iceoryx2-bb/lock-free/",
     "iceoryx2-bb/threadsafe/",
     "iceoryx2-bb/container",
+    "iceoryx2-bb/compatability",
     "iceoryx2-bb/derive-macros",
     "iceoryx2-bb/elementary",
     "iceoryx2-bb/elementary-traits",
@@ -62,6 +63,7 @@ version = "0.6.1"
 iceoryx2-bb-threadsafe = { version = "0.6.1", path = "iceoryx2-bb/threadsafe/" }
 iceoryx2-bb-lock-free = { version = "0.6.1", path = "iceoryx2-bb/lock-free/" }
 iceoryx2-bb-container = { version = "0.6.1", path = "iceoryx2-bb/container/" }
+iceoryx2-bb-compatability = { version = "0.6.1", path = "iceoryx2-bb/compatability/" }
 iceoryx2-bb-derive-macros = { version = "0.6.1", path = "iceoryx2-bb/derive-macros/" }
 iceoryx2-bb-elementary = { version = "0.6.1", path = "iceoryx2-bb/elementary/" }
 iceoryx2-bb-elementary-traits = { version = "0.6.1", path = "iceoryx2-bb/elementary-traits/" }
@@ -96,6 +98,7 @@ enum-iterator = { version = "2.1.0" }
 better-panic = { version = "0.3.0" }
 colored = { version = "2.1" }
 generic-tests = { version = "0.1.2" }
+hashbrown = { version = "0.15" }
 human-panic = { version = "2.0.2" }
 lazy_static = { version = "1.4.0" }
 libc = { version = "0.2.169" }

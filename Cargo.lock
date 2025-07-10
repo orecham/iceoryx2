@@ -895,6 +895,7 @@ name = "example"
 version = "0.6.1"
 dependencies = [
  "clap",
+ "hashbrown 0.15.2",
  "iceoryx2",
  "iceoryx2-bb-container",
  "iceoryx2-bb-derive-macros",
@@ -934,6 +935,12 @@ name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
+name = "foldhash"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
 name = "form_urlencoded"
@@ -1134,6 +1141,11 @@ name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash",
+]
 
 [[package]]
 name = "heck"
@@ -1245,6 +1257,7 @@ name = "iceoryx2"
 version = "0.6.1"
 dependencies = [
  "generic-tests",
+ "iceoryx2-bb-compatability",
  "iceoryx2-bb-container",
  "iceoryx2-bb-derive-macros",
  "iceoryx2-bb-elementary",
@@ -1261,6 +1274,13 @@ dependencies = [
  "serde",
  "tiny-fn",
  "toml",
+]
+
+[[package]]
+name = "iceoryx2-bb-compatability"
+version = "0.6.1"
+dependencies = [
+ "hashbrown 0.15.2",
 ]
 
 [[package]]
@@ -1430,6 +1450,7 @@ version = "0.6.1"
 dependencies = [
  "cdr",
  "generic-tests",
+ "iceoryx2-bb-compatability",
  "iceoryx2-bb-container",
  "iceoryx2-bb-derive-macros",
  "iceoryx2-bb-elementary",
