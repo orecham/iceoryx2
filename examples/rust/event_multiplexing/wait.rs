@@ -12,6 +12,10 @@
 
 use clap::Parser;
 use iceoryx2::{port::listener::Listener, prelude::*};
+
+#[cfg(not(feature = "std"))]
+use hashbrown::HashMap;
+#[cfg(feature = "std")]
 use std::collections::HashMap;
 
 fn main() -> Result<(), Box<dyn core::error::Error>> {
