@@ -89,7 +89,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macOS-latest]
-        cargo-features-flag: [""]
+        cargo-features-flag: ["", "--no-default-features"]
         include:
           - os: ubuntu-latest
             cargo-features-flag: "--features libc_platform"
@@ -425,7 +425,7 @@ jobs:
             arg: ""
             cmake-build-type: "-DCMAKE_BUILD_TYPE=Debug" # required for Makefile Generators at config time
             cmake-build-config: "--config Debug" # required for Visual Studio at build and install time
-        cargo-features-flag: ["", "--features libc_platform"]
+        cargo-features-flag: ["", "--features libc_platform", "--no-default-features"]
         include:
           # NOTE: enable for MinGW
           # - toolchain: stable-gnu
