@@ -9,69 +9,41 @@ the [official approach](https://www.rust-lang.org/tools/install).
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-You need to have at least python 3.9 installed. Create a new environment with
+Additionally, install poetry to simplify managing the Python virtual
+environment:
 
 ```sh
-cd iceoryx2
-python -m venv .env
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-and enter it by calling
+Then you can set up a virtual environment and install all dependencies using
 
 ```sh
-source .env/bin/activate        # for bash shell
-source .env/bin/activate.fish   # for fish shell
-```
+cd $(git rev-parse --show-toplevel)
 
-Then some dependencies must be installed with `pip`
-
-```sh
-pip install maturin
-```
-
-### Install Development Dependencies
-
-If you would like to run the iceoryx2 python unit tests you need to install
-`pytest` additionally.
-
-```sh
-pip install pytest
-```
-
-If you would like to start developing on the python bindings you need to
-install:
-
-```sh
-pip install prospector[with_mypy]
-pip install black
-pip install isort
-pip install bandit
+poetry --project iceoryx2-ffi/python install
 ```
 
 ## Build
 
-Compile iceoryx2 and the python language bindings by calling
+Compile iceoryx2 and the Python language bindings for development by calling:
 
 ```sh
-maturin develop --manifest-path iceoryx2-ffi/python/Cargo.toml
+cd $(git rev-parse --show-toplevel)
+
+poetry --project iceoryx2-ffi/python run maturin develop --manifest-path iceoryx2-ffi/python/Cargo.toml --target-dir target/ffi/python
 ```
 
-## Running Example
+The language bindings will be then available for use inside the virtual
+environment.
 
-To run any python example, please ensure that you have created an environment
-and entered it first.
+## Running Examples
 
-```sh
-cd iceoryx2
-python -m venv .env # creates the new environment, needs to be called only once
-
-source .env/bin/activate        # for bash shell
-source .env/bin/activate.fish   # for fish shell
-```
-
-Then start the example by calling:
+You can then run any Python example from the virtual environment managed by
+poetry:
 
 ```sh
-cd iceoryx2
-python examples/python/publish_subscribe/publisher.py
+cd $(git rev-parse --show-toplevel)
+
+poetry --project iceoryx2-ffi/python run python examples/python/publish_subscribe/publisher.py
 ```

@@ -81,11 +81,9 @@ if [[ ${BUILD_END_TO_END_TESTS} == true ]]; then
     cmake --build target/ffi/cxx/build -j$NUM_JOBS
 
     # Build the Python bindings
-    rm -rf .env
-    python -m venv .env
-    source .env/bin/activate
-    rm -f iceoryx2-ffi/python/python-src/iceoryx2/*.so
-    maturin develop  --manifest-path iceoryx2-ffi/python/Cargo.toml
+    poetry --project iceoryx2-ffi/python install
+    eval $(poetry --project iceoryx2-ffi/python env activate)
+    maturin develop --manifest-path iceoryx2-ffi/python/Cargo.toml --target-dir target/ffi/python
 fi
 
 
