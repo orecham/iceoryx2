@@ -28,6 +28,6 @@ sudo ./internal/scripts/install_dependencies_ubuntu.sh
 In the repository root folder, execute the following steps.
 
 ```bash
-cmake -S . -B target/ffi/build -DBUILD_EXAMPLES=ON
-cmake --build target/ffi/build
+cmake -S . -B target/ffi/cxx/build -DBUILD_EXAMPLES=ON
+cmake --build target/ffi/cxx/build
 ```

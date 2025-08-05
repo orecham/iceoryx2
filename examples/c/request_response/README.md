@@ -62,8 +62,8 @@ instructions in the [C Examples Readme](../README.md).
 First you have to build the C examples:
 
 ```sh
-cmake -S . -B target/ffi/build -DBUILD_EXAMPLES=ON -DBUILD_CXX_BINDING=OFF
-cmake --build target/ffi/build
+cmake -S . -B target/ffi/cxx/build -DBUILD_EXAMPLES=ON -DBUILD_CXX_BINDING=OFF
+cmake --build target/ffi/cxx/build
 ```
 
 ## How to Run
@@ -74,13 +74,13 @@ following commands:
 ### Terminal 1
 
 ```sh
-./target/ffi/build/examples/c/request_response/example_c_request_response_client
+./target/ffi/cxx/build/examples/c/request_response/example_c_request_response_client
 ```
 
 ### Terminal 2
 
 ```sh
-./target/ffi/build/examples/c/request_response/example_c_request_response_server
+./target/ffi/cxx/build/examples/c/request_response/example_c_request_response_server
 ```
 
 Feel free to run multiple instances of the client or server processes

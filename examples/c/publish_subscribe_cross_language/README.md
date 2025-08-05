@@ -26,8 +26,8 @@ When you want to run the C publisher and subscriber applications, you first have
 to build the C examples:
 
 ```sh
-cmake -S . -B target/ffi/build -DBUILD_EXAMPLES=ON -DBUILD_CXX_BINDING=OFF
-cmake --build target/ffi/build
+cmake -S . -B target/ffi/cxx/build -DBUILD_EXAMPLES=ON -DBUILD_CXX_BINDING=OFF
+cmake --build target/ffi/cxx/build
 ```
 
 ## How to Run
@@ -40,7 +40,7 @@ execute the following commands:
 Run the C subscriber application:
 
 ```sh
-./target/ffi/build/examples/c/publish_subscribe_cross_language/example_c_cross_language_subscriber
+./target/ffi/cxx/build/examples/c/publish_subscribe_cross_language/example_c_cross_language_subscriber
 ```
 
 ### Terminal 2
@@ -48,7 +48,7 @@ Run the C subscriber application:
 Run the C publisher application:
 
 ```sh
-./target/ffi/build/examples/c/publish_subscribe_cross_language/example_c_cross_language_publisher
+./target/ffi/cxx/build/examples/c/publish_subscribe_cross_language/example_c_cross_language_publisher
 ```
 
 Feel free to also run the subscriber and publisher applications from other
