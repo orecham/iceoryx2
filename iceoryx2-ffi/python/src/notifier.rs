@@ -12,6 +12,7 @@
 
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     duration::Duration, error::NotifierNotifyError, event_id::EventId,
@@ -23,10 +24,12 @@ pub(crate) enum NotifierType {
     Local(Option<iceoryx2::port::notifier::Notifier<crate::LocalService>>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Represents the sending endpoint of an event based communication.
 pub struct Notifier(pub(crate) NotifierType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Notifier {
     #[getter]

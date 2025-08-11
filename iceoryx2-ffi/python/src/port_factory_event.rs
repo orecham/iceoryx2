@@ -12,6 +12,7 @@
 
 use iceoryx2::prelude::{CallbackProgression, PortFactory};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     attribute_set::AttributeSet,
@@ -31,11 +32,13 @@ pub(crate) enum PortFactoryEventType {
     Local(iceoryx2::service::port_factory::event::PortFactory<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The factory for `MessagingPattern::Event`. It can acquire dynamic and static service
 /// informations and create `Notifier` or `Listener` ports.
 pub struct PortFactoryEvent(pub(crate) Parc<PortFactoryEventType>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryEvent {
     #[getter]

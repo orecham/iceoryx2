@@ -13,6 +13,7 @@
 use iceoryx2::prelude::{CallbackProgression, PortFactory};
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::attribute_set::AttributeSet;
 use crate::error::NodeListFailure;
@@ -45,6 +46,7 @@ pub(crate) enum PortFactoryPublishSubscribeType {
     ),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The factory for `MessagingPattern::PublishSubscribe`. It can acquire dynamic and static service
 /// informations and create `Publisher` or `Subscriber` ports.
@@ -68,6 +70,7 @@ impl PortFactoryPublishSubscribe {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryPublishSubscribe {
     #[getter]

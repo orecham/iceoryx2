@@ -11,11 +11,14 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The unique id of a `Service`
 pub struct ServiceId(pub(crate) iceoryx2::service::service_id::ServiceId);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceId {
     #[staticmethod]

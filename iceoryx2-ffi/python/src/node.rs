@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     cleanup_state::CleanupState,
@@ -32,6 +33,7 @@ pub(crate) enum NodeType {
     Local(iceoryx2::node::Node<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The central entry point of iceoryx2. Represents a node of the iceoryx2
 /// system. One process can have arbitrary many nodes but usually it should be
@@ -39,6 +41,7 @@ pub(crate) enum NodeType {
 /// Can be created via the `NodeBuilder`.
 pub struct Node(pub(crate) Parc<NodeType>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Node {
     pub fn __str__(&self) -> String {

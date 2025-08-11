@@ -12,6 +12,7 @@
 
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     attribute_set::AttributeSet,
@@ -28,10 +29,12 @@ pub(crate) enum ServiceDetailsType {
     Local(iceoryx2::service::ServiceDetails<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:#?}")]
 /// Represents all the `Service` information that one can acquire with `Service::list()`.
 pub struct ServiceDetails(pub(crate) ServiceDetailsType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceDetails {
     /// A list of all `Node`s that are registered at the `Service`

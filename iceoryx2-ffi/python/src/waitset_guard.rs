@@ -14,6 +14,7 @@ use core::any::Any;
 use std::sync::Arc;
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{parc::Parc, waitset::WaitSetType};
 
@@ -31,11 +32,13 @@ pub(crate) enum WaitSetGuardType {
     Local(StorageType<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Is returned when something is attached to the `WaitSet`. As soon as it goes out
 /// of scope, the attachment is detached.
 pub struct WaitSetGuard(pub(crate) WaitSetGuardType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl WaitSetGuard {
     /// Drops the `WaitSetGuard`. After this call the `WaitSetGuard` is no longer usable.

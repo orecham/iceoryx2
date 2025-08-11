@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     parc::Parc, response_header::ResponseHeader, type_storage::TypeStorage,
@@ -29,6 +30,7 @@ pub(crate) enum ResponseType {
     Local(Option<LocalResponse>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// It stores the payload and can be received by the `PendingResponse` after a `RequestMut` was
 /// sent to a `Server` via the `Client`.
@@ -38,6 +40,7 @@ pub struct Response {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Response {
     #[getter]

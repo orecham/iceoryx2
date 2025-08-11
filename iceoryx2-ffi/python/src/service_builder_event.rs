@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     attribute_specifier::AttributeSpecifier,
@@ -27,10 +28,12 @@ pub(crate) enum ServiceBuilderEventType {
     Local(iceoryx2::service::builder::event::Builder<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Builder to create new `MessagingPattern::Event` based `Service`s
 pub struct ServiceBuilderEvent(pub(crate) ServiceBuilderEventType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceBuilderEvent {
     /// Enables the deadline property of the service. There must be a notification emitted by any

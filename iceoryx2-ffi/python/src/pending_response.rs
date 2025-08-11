@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::ReceiveError,
@@ -42,6 +43,7 @@ pub(crate) enum PendingResponseType {
     Local(Option<LocalPendingResponse>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Represents an active connection to all `Server` that received the `RequestMut`. The
 /// `Client` can use it to receive the corresponding `Response`s.
@@ -55,6 +57,7 @@ pub struct PendingResponse {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PendingResponse {
     #[getter]

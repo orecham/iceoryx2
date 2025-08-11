@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::waitset_guard::{WaitSetGuard, WaitSetGuardType};
 
@@ -21,10 +22,12 @@ pub(crate) enum WaitSetAttachmentIdType {
 }
 
 #[derive(PartialEq, Eq, Hash)]
+#[gen_stub_pyclass]
 #[pyclass(eq, hash, frozen)]
 /// Represents an attachment to the `WaitSet`
 pub struct WaitSetAttachmentId(pub(crate) WaitSetAttachmentIdType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl WaitSetAttachmentId {
     #[staticmethod]

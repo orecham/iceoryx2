@@ -14,6 +14,7 @@ use std::sync::Arc;
 
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     duration::Duration, error::ListenerWaitError, event_id::EventId,
@@ -27,10 +28,12 @@ pub(crate) enum ListenerType {
     Local(Option<Arc<iceoryx2::port::listener::Listener<crate::LocalService>>>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Represents the receiving endpoint of an event based communication.
 pub struct Listener(pub(crate) ListenerType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Listener {
     #[getter]

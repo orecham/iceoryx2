@@ -13,6 +13,7 @@
 use iceoryx2::prelude::{CallbackProgression, PortFactory};
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::attribute_set::AttributeSet;
 use crate::error::NodeListFailure;
@@ -50,6 +51,7 @@ pub(crate) enum PortFactoryRequestResponseType {
     ),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The factory for `MessagingPattern::RequestResponse`. It can acquire dynamic and static service
 /// informations and create `Client` or `Server` ports.
@@ -61,6 +63,7 @@ pub struct PortFactoryRequestResponse {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryRequestResponse {
     #[getter]

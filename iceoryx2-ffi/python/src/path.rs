@@ -13,7 +13,9 @@
 use crate::error::SemanticStringError;
 use iceoryx2::prelude::SemanticString;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq)]
 /// Relocatable (inter-process shared memory compatible) SemanticString implementation for
@@ -22,6 +24,7 @@ use pyo3::prelude::*;
 /// path or file name length the system supports can be stored.
 pub struct Path(pub(crate) iceoryx2::prelude::Path);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Path {
     #[staticmethod]

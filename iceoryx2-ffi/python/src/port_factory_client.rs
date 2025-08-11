@@ -13,6 +13,7 @@
 use crate::{error::ClientCreateError, type_storage::TypeStorage};
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     allocation_strategy::AllocationStrategy,
@@ -44,6 +45,7 @@ pub(crate) enum PortFactoryClientType {
     Local(Parc<LocalPortFactoryClient<'static>>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Factory to create a new `Client` port/endpoint for `MessagingPattern::RequestResponse`
 /// based communication.
@@ -110,6 +112,7 @@ impl PortFactoryClient {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryClient {
     #[getter]

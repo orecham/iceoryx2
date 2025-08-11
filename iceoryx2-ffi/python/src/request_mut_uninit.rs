@@ -15,6 +15,7 @@ use core::mem::MaybeUninit;
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     parc::Parc,
@@ -43,6 +44,7 @@ pub(crate) enum RequestMutUninitType {
     Local(Option<LocalRequestMutUninit>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// A version of the `RequestMut` where the payload is not initialized which allows
 /// true zero copy usage. To send a `RequestMutUninit` it must be first initialized
@@ -55,6 +57,7 @@ pub struct RequestMutUninit {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl RequestMutUninit {
     #[getter]

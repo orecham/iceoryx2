@@ -11,14 +11,17 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{node_id::NodeId, unique_publisher_id::UniquePublisherId};
 
+#[gen_stub_pyclass]
 #[pyclass(eq)]
 #[derive(PartialEq, Eq)]
 /// Sample header used by `MessagingPattern::PublishSubscribe`
 pub struct HeaderPublishSubscribe(pub(crate) iceoryx2::service::header::publish_subscribe::Header);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl HeaderPublishSubscribe {
     #[getter]

@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::WaitSetCreateError,
@@ -21,10 +22,12 @@ use crate::{
 };
 
 #[derive(Default)]
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 /// Creates a new `WaitSet`.
 pub struct WaitSetBuilder(iceoryx2::prelude::WaitSetBuilder);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl WaitSetBuilder {
     #[staticmethod]

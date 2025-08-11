@@ -13,9 +13,11 @@
 use std::sync::Arc;
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
-#[derive(Debug)]
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
+#[derive(Debug)]
 /// Represents a FileDescriptor in a POSIX system. Contains always a value greater or equal zero,
 /// a valid file descriptor. It takes the ownership of the provided file descriptor and calls
 /// `posix::close` on destruction.
@@ -29,6 +31,7 @@ impl iceoryx2::prelude::FileDescriptorBased for FileDescriptor {
 
 impl iceoryx2::prelude::SynchronousMultiplexing for FileDescriptor {}
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl FileDescriptor {
     #[staticmethod]

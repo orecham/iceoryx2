@@ -11,15 +11,18 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{attribute::Attribute, attribute_key::AttributeKey, attribute_value::AttributeValue};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq)]
 /// Represents a single service attribute (key-value) pair that can be defined when the service
 /// is being created.
 pub struct AttributeSet(pub(crate) iceoryx2::service::attribute::AttributeSet);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl AttributeSet {
     #[getter]

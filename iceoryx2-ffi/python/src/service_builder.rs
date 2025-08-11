@@ -12,6 +12,7 @@
 
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::service_builder_request_response::ServiceBuilderRequestResponseType;
 use crate::{
@@ -27,10 +28,12 @@ pub(crate) enum ServiceBuilderType {
     Local(iceoryx2::service::builder::Builder<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Builder to create or open `Service`s
 pub struct ServiceBuilder(pub(crate) ServiceBuilderType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceBuilder {
     /// Create a new builder to create a `MessagingPattern::Event` `Service`.

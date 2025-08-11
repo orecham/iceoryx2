@@ -11,15 +11,18 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{duration::Duration, event_id::EventId};
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The static configuration of an `MessagingPattern::Event`
 /// based service. Contains all parameters that do not change during the lifetime of a
 /// `Service`.
 pub struct StaticConfigEvent(pub(crate) iceoryx2::service::static_config::event::StaticConfig);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl StaticConfigEvent {
     #[getter]

@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::SendError, parc::Parc, response_header::ResponseHeader, type_storage::TypeStorage,
@@ -34,6 +35,7 @@ pub(crate) enum ResponseMutType {
     Local(Option<LocalResponseMut>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 pub struct ResponseMut {
     pub(crate) value: Parc<ResponseMutType>,
@@ -41,6 +43,7 @@ pub struct ResponseMut {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ResponseMut {
     #[getter]

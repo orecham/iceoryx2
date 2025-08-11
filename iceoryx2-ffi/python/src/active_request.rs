@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::LoanError,
@@ -43,6 +44,7 @@ pub(crate) enum ActiveRequestType {
     Local(Option<LocalActiveRequest>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The `ActiveRequest` represents the object that contains the payload that the `Client` sends to the
 /// `Server`.
@@ -54,6 +56,7 @@ pub struct ActiveRequest {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ActiveRequest {
     #[getter]

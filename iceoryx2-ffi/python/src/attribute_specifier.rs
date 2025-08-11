@@ -11,11 +11,13 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     attribute_key::AttributeKey, attribute_set::AttributeSet, attribute_value::AttributeValue,
 };
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 /// Represents a single service attribute (key-value) pair that can be defined when the service
 /// is being created.
@@ -27,6 +29,7 @@ impl Default for AttributeSpecifier {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl AttributeSpecifier {
     #[staticmethod]

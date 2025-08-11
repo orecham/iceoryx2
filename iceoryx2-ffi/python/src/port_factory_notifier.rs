@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::NotifierCreateError,
@@ -31,6 +32,7 @@ pub(crate) enum PortFactoryNotifierType {
     ),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Factory to create a new `Notifier` port/endpoint for `MessagingPattern::Event` based
 /// communication.
@@ -70,6 +72,7 @@ impl PortFactoryNotifier {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryNotifier {
     /// Creates a new `Notifier` port or emits a `NotifierCreateError` on failure.

@@ -13,6 +13,7 @@
 use std::sync::Arc;
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::ListenerCreateError,
@@ -32,6 +33,7 @@ pub(crate) enum PortFactoryListenerType {
     ),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Factory to create a new `Listener` port/endpoint for `MessagingPattern::Event` based
 /// communication.
@@ -71,6 +73,7 @@ impl PortFactoryListener {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactoryListener {
     /// Creates the `Listener` port or emits a `ListenerCreateError` on failure.

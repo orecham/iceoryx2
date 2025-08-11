@@ -12,6 +12,7 @@
 
 use iceoryx2::node::NodeView;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pyclass_complex_enum, gen_stub_pymethods};
 
 use crate::{
     config::Config, error::NodeCleanupFailure, file_name::FileName, node_id::NodeId,
@@ -30,11 +31,13 @@ pub(crate) enum DeadNodeViewType {
     Local(iceoryx2::node::DeadNodeView<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Clone)]
 /// Contains details of a `Node`.
 pub struct NodeDetails(pub(crate) iceoryx2::node::NodeDetails);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl NodeDetails {
     #[getter]
@@ -56,11 +59,13 @@ impl NodeDetails {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Clone)]
 /// Contains all details of a `Node` that is alive.
 pub struct AliveNodeView(pub(crate) AliveNodeViewType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl AliveNodeView {
     #[getter]
@@ -83,11 +88,13 @@ impl AliveNodeView {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 #[derive(Clone)]
 /// Contains all details of a `Node` that is dead.
 pub struct DeadNodeView(pub(crate) DeadNodeViewType);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl DeadNodeView {
     #[getter]
@@ -127,6 +134,7 @@ impl DeadNodeView {
     }
 }
 
+#[gen_stub_pyclass_complex_enum]
 #[pyclass]
 #[derive(Clone)]
 /// Describes the state of a `Node`.

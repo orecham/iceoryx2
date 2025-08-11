@@ -12,13 +12,16 @@
 
 use crate::{attribute_key::AttributeKey, attribute_value::AttributeValue};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq)]
 /// Represents a single service attribute (key-value) pair that can be defined when the service
 /// is being created.
 pub struct Attribute(pub(crate) iceoryx2::service::attribute::Attribute);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Attribute {
     #[staticmethod]

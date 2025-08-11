@@ -11,12 +11,15 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq)]
 /// Represents a time duration.
 pub struct Duration(pub(crate) core::time::Duration);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Duration {
     #[staticmethod]

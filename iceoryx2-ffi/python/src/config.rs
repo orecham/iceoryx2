@@ -18,11 +18,14 @@ use crate::parc::Parc;
 use crate::path::Path;
 use crate::unable_to_deliver_strategy::UnableToDeliverStrategy;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// All configurable settings of a `Node`.
 pub struct Node(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Node {
     pub fn __str__(&self) -> String {
@@ -106,10 +109,12 @@ impl Node {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// All configurable settings of a `Service`.
 pub struct Service(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Service {
     pub fn __str__(&self) -> String {
@@ -216,11 +221,13 @@ impl Service {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Default settings for the publish-subscribe messaging pattern. These settings are used unless
 /// the user specifies custom QoS or port settings.
 pub struct PublishSubscribe(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PublishSubscribe {
     pub fn __str__(&self) -> String {
@@ -413,11 +420,13 @@ impl PublishSubscribe {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Default settings for the event messaging pattern. These settings are used unless
 /// the user specifies custom QoS or port settings.
 pub struct Event(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Event {
     pub fn __str__(&self) -> String {
@@ -594,11 +603,13 @@ impl Event {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Default settings for the request response messaging pattern. These settings are used unless
 /// the user specifies custom QoS or port settings.
 pub struct RequestResponse(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl RequestResponse {
     pub fn __str__(&self) -> String {
@@ -913,10 +924,12 @@ impl RequestResponse {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The global settings
 pub struct Global(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Global {
     pub fn __str__(&self) -> String {
@@ -972,11 +985,13 @@ impl Global {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Default settings. These values are used when the user in the code does not specify anything
 /// else.
 pub struct Defaults(Parc<iceoryx2::config::Config>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Defaults {
     pub fn __str__(&self) -> String {
@@ -1002,6 +1017,7 @@ impl Defaults {
     }
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Represents the configuration that iceoryx2 will utilize. It is divided into two sections:
 /// the [Global] settings, which must align with the iceoryx2 instance the application intends to
@@ -1015,6 +1031,7 @@ impl PartialEq for Config {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Config {
     pub fn __eq__(&self, other: &Self) -> bool {
@@ -1038,16 +1055,19 @@ impl Config {
     }
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 pub fn default() -> Config {
     Config(Parc::new(iceoryx2::config::Config::default()))
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 pub fn global_config() -> Config {
     Config(Parc::new(iceoryx2::config::Config::global_config().clone()))
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 pub fn setup_global_config_from_file(config_file: &FilePath) -> PyResult<Config> {
     Ok(Config(Parc::new(
@@ -1057,6 +1077,7 @@ pub fn setup_global_config_from_file(config_file: &FilePath) -> PyResult<Config>
     )))
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 /// Loads a configuration from a file. On success it returns a `Config` object otherwise a
 /// `ConfigCreationError` describing the failure.
@@ -1068,24 +1089,28 @@ pub fn from_file(config_file: &FilePath) -> PyResult<Config> {
     )))
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 /// Path to the default user config file
 pub fn default_user_config_file_path() -> FilePath {
     FilePath(iceoryx2::config::Config::default_user_config_file_path())
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 /// Relative path to the config file
 pub fn relative_config_path() -> Path {
     Path(iceoryx2::config::Config::relative_config_path())
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 /// Path to the default config file
 pub fn default_config_file_path() -> FilePath {
     FilePath(iceoryx2::config::Config::default_config_file_path())
 }
 
+#[gen_stub_pyfunction]
 #[pyfunction]
 /// The name of the default iceoryx2 config file
 pub fn default_config_file_name() -> FileName {

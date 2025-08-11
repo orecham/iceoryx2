@@ -12,6 +12,7 @@
 
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::alignment::Alignment;
 use crate::attribute_specifier::AttributeSpecifier;
@@ -48,6 +49,7 @@ pub(crate) enum ServiceBuilderRequestResponseType {
     Local(LocalBuilder),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Builder to create new `MessagingPattern::RequestResponse` based `Service`s
 pub struct ServiceBuilderRequestResponse {
@@ -90,6 +92,7 @@ impl ServiceBuilderRequestResponse {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceBuilderRequestResponse {
     pub fn __set_request_payload_type(&mut self, value: PyObject) {

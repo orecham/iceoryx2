@@ -12,7 +12,9 @@
 
 use crate::error::SemanticStringError;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq, Clone)]
 /// Represents the string name of a type. The name shall uniquely identify the type in the
@@ -21,6 +23,7 @@ pub struct TypeName(
     pub(crate) iceoryx2::service::static_config::message_type_details::TypeNameString,
 );
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl TypeName {
     #[staticmethod]
