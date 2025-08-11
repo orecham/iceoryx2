@@ -11,13 +11,16 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(eq, str = "{0:?}")]
 #[derive(PartialEq)]
 /// User defined identifier that can be provided in `Notifier.notify()` to signal a specific
 /// kind of event.
 pub struct EventId(pub(crate) iceoryx2::prelude::EventId);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl EventId {
     #[staticmethod]

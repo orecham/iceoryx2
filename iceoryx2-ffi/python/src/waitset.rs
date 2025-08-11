@@ -13,6 +13,7 @@
 use core::ops::Deref;
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     duration::Duration,
@@ -31,6 +32,7 @@ pub(crate) enum WaitSetType {
     Local(iceoryx2::waitset::WaitSet<crate::LocalService>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The `WaitSet` implements a reactor pattern and allows to wait on multiple events in one
 /// single call `WaitSet::wait_and_process()` until a interrupt or termination signal was received.
@@ -40,6 +42,7 @@ pub(crate) enum WaitSetType {
 /// Can be created via the `WaitSetBuilder`.
 pub struct WaitSet(pub(crate) Parc<WaitSetType>);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl WaitSet {
     /// Attaches a `Listener` as notification to the `WaitSet`. Whenever an event is received on the

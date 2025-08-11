@@ -11,12 +11,15 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(eq, str = "{0:?}")]
 #[derive(PartialEq, Eq)]
 /// The system-wide unique id of a `Notifier`.
 pub struct UniqueNotifierId(pub(crate) iceoryx2::port::port_identifiers::UniqueNotifierId);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl UniqueNotifierId {
     #[getter]

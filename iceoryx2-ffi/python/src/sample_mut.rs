@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::SendError, header_publish_subscribe::HeaderPublishSubscribe, parc::Parc,
@@ -40,6 +41,7 @@ pub(crate) enum SampleMutType {
     ),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Acquired by a `Publisher` via
 ///  * `Publisher::loan()`,
@@ -54,6 +56,7 @@ pub struct SampleMut {
     pub(crate) user_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl SampleMut {
     #[getter]

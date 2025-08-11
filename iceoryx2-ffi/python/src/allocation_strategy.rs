@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
+#[gen_stub_pyclass_enum]
 #[pyclass(eq, eq_int)]
 #[derive(PartialEq, Clone, Debug)]
 /// Describes generically an `AllocationStrategy`, meaning how the memory is increased when the
@@ -27,6 +29,7 @@ pub enum AllocationStrategy {
     Static,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl AllocationStrategy {
     pub fn __str__(&self) -> String {

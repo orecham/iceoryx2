@@ -12,6 +12,7 @@
 
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     error::SubscriberCreateError,
@@ -41,6 +42,7 @@ pub(crate) enum PortFactorySubscriberType {
     Local(Parc<LocalPortFactorySubscriber<'static>>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Factory to create a new `Subscriber` port/endpoint for
 /// `MessagingPattern::PublishSubscribe` based communication.
@@ -101,6 +103,7 @@ impl PortFactorySubscriber {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PortFactorySubscriber {
     /// Defines the buffer size of the `Subscriber`. Smallest possible value is `1`.

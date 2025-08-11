@@ -11,12 +11,15 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 #[derive(Clone, PartialEq)]
 /// The system-wide unique id of a `Node`
 pub struct NodeId(pub(crate) iceoryx2::node::NodeId);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl NodeId {
     pub fn __eq__(&self, other: &Self) -> bool {

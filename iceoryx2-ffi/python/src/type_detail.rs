@@ -11,10 +11,12 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{type_name::TypeName, type_variant::TypeVariant};
 use iceoryx2::testing;
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 /// Contains all type details required to connect to a `Service`
 #[derive(PartialEq)]
@@ -28,6 +30,7 @@ impl Default for TypeDetail {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl TypeDetail {
     #[staticmethod]

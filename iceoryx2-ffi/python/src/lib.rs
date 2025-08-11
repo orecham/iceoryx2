@@ -98,9 +98,12 @@ pub mod waitset_run_result;
 
 use pyo3::prelude::*;
 use pyo3::wrap_pymodule;
+use pyo3_stub_gen::define_stub_info_gatherer;
 
 pub(crate) use service_type::IpcService;
 pub(crate) use service_type::LocalService;
+
+define_stub_info_gatherer!(stub_info);
 
 /// iceoryx2 Python language bindings
 #[pymodule]

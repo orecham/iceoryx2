@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     config::Config,
@@ -21,10 +22,12 @@ use crate::{
     service_type::ServiceType,
 };
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Builder to create or open `Service`s
 pub struct Service(());
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Service {
     #[staticmethod]

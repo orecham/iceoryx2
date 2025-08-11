@@ -11,13 +11,16 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::unique_client_id::UniqueClientId;
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 /// Request header used by `MessagingPattern::RequestResponse`
 pub struct RequestHeader(pub(crate) iceoryx2::service::header::request_response::RequestHeader);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl RequestHeader {
     #[getter]

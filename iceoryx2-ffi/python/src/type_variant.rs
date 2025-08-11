@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::gen_stub_pyclass_enum;
 
+#[gen_stub_pyclass_enum]
 #[pyclass]
 #[derive(PartialEq, Clone, Debug)]
 /// Defines if the type is a slice with a runtime-size (`TypeVariant::Dynamic`)

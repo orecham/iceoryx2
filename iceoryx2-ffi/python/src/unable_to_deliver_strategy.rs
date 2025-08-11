@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
+#[gen_stub_pyclass_enum]
 #[pyclass(eq, eq_int)]
 #[derive(PartialEq, Clone, Debug)]
 /// Defines the strategy a sender shall pursue when the buffer of the receiver is full
@@ -24,6 +26,7 @@ pub enum UnableToDeliverStrategy {
     DiscardSample,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl UnableToDeliverStrategy {
     pub fn __str__(&self) -> String {

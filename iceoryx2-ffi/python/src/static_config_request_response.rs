@@ -11,9 +11,11 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::message_type_details::MessageTypeDetails;
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// The static configuration of an `MessagingPattern::RequestResponse` based service. Contains all
 /// parameters that do not change during the lifetime of a `Service`.
@@ -21,6 +23,7 @@ pub struct StaticConfigRequestResponse(
     pub(crate) iceoryx2::service::static_config::request_response::StaticConfig,
 );
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl StaticConfigRequestResponse {
     #[getter]

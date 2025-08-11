@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::gen_stub_pyclass;
 
+#[gen_stub_pyclass]
 #[pyclass]
 pub struct TypeStorage {
     pub value: Option<PyObject>,

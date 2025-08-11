@@ -12,6 +12,7 @@
 
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::alignment::Alignment;
 use crate::attribute_specifier::AttributeSpecifier;
@@ -42,6 +43,7 @@ pub(crate) enum ServiceBuilderPublishSubscribeType {
     Local(LocalBuilder),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Builder to create new `MessagingPattern::PublishSubscribe` based `Service`s
 pub struct ServiceBuilderPublishSubscribe {
@@ -76,6 +78,7 @@ impl ServiceBuilderPublishSubscribe {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceBuilderPublishSubscribe {
     pub fn __set_payload_type(&mut self, value: PyObject) {

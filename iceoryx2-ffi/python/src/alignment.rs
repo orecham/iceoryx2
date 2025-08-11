@@ -11,14 +11,17 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::error::InvalidAlignmentValue;
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}", eq)]
 #[derive(PartialEq)]
 /// Contains the alignment memory can have.
 pub struct Alignment(pub(crate) iceoryx2::prelude::Alignment);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Alignment {
     #[staticmethod]

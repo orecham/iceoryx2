@@ -11,15 +11,18 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::type_detail::TypeDetail;
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Contains all type information to the header and payload type.
 pub struct MessageTypeDetails(
     pub(crate) iceoryx2::service::static_config::message_type_details::MessageTypeDetails,
 );
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl MessageTypeDetails {
     #[getter]

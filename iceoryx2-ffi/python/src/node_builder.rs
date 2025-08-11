@@ -11,6 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     config::Config,
@@ -23,10 +24,12 @@ use crate::{
 };
 
 #[derive(Default)]
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 /// Creates a new `Node`.
 pub struct NodeBuilder(iceoryx2::prelude::NodeBuilder);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl NodeBuilder {
     #[staticmethod]

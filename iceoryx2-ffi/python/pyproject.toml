@@ -64,6 +64,7 @@ black = "^25.1.0"
 isort = "^6.0.1"
 bandit = "^1.8.6"
 maturin = "^1.9.1"
+pyo3-stubgen = "^0.3.0"
 
 [tool.poetry.requires-plugins]
 poethepoet = { version = "~0.35.0", extras = ["poetry_plugin"]}
@@ -73,6 +74,9 @@ poetry_command = ""
 
 [tool.poe.tasks.build-into-venv]
 shell = "maturin develop --manifest-path Cargo.toml --target-dir ../../target/ffi/python"
+
+[tool.poe.tasks.generate-stubs]
+shell = "pyo3-stubgen iceoryx2._iceoryx2 python-src/"
 
 [tool.poe.tasks.check-imports]
 sequence = [

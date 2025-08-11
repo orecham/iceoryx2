@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+#[gen_stub_pyclass]
 #[pyclass(str = "{0:?}")]
 /// Returned by `Node.cleanup_dead_nodes()`. Contains the cleanup report of the call
 /// and contains the number of dead nodes that were successfully cleaned up and how many
@@ -20,6 +22,7 @@ use pyo3::prelude::*;
 /// have the permission to access the corresponding resources.
 pub struct CleanupState(pub(crate) iceoryx2::node::CleanupState);
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl CleanupState {
     #[getter]

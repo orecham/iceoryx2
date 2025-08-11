@@ -13,6 +13,7 @@
 use iceoryx2::service::builder::{CustomHeaderMarker, CustomPayloadMarker};
 use iceoryx2_bb_log::fatal_panic;
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
     active_request::{ActiveRequest, ActiveRequestType},
@@ -43,6 +44,7 @@ pub(crate) enum ServerType {
     Local(Option<LocalServer>),
 }
 
+#[gen_stub_pyclass]
 #[pyclass]
 /// Represents the receiving endpoint of an event based communication.
 pub struct Server {
@@ -53,6 +55,7 @@ pub struct Server {
     pub(crate) response_header_type_details: TypeStorage,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Server {
     #[getter]

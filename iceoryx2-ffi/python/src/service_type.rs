@@ -11,7 +11,9 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use pyo3::prelude::*;
+use pyo3_stub_gen_derive::{gen_stub_pyclass_enum, gen_stub_pymethods};
 
+#[gen_stub_pyclass_enum]
 #[pyclass(eq, eq_int)]
 #[derive(PartialEq, Clone, Debug)]
 /// Defines the type of the `Service` and what kind of resources and operating system mechanisms
@@ -26,6 +28,7 @@ pub enum ServiceType {
 pub(crate) type IpcService = iceoryx2::prelude::ipc_threadsafe::Service;
 pub(crate) type LocalService = iceoryx2::prelude::local_threadsafe::Service;
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ServiceType {
     pub fn __str__(&self) -> String {
