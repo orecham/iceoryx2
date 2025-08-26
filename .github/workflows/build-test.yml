@@ -810,6 +810,29 @@ jobs:
          name: documentation-api-c-${{ github.sha }}
          path: doc/api/c/target/html
 
+  documentation-api-cxx:
+    needs: preflight-check
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4
+
+     - name: Prepare Linux
+       run: |
+         internal/scripts/ci_prepare_ubuntu.sh
+         uname -a
+
+     - name: Build C++ API Documentation
+       run: |
+         cd doc/api/cxx && make html && cd -
+
+     - name: Upload C++ Documentation Artifact
+       if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
+       uses: actions/upload-artifact@v4
+       with:
+         name: documentation-api-cxx-${{ github.sha }}
+         path: doc/api/cxx/target/html
+
   documentation-api-deploy:
     # if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
@@ -832,11 +855,17 @@ jobs:
          name: documentation-api-python-${{ github.sha }}
          path: ./artifacts/python
 
-     - name: Download C++ Documentation
+     - name: Download C Documentation
        uses: actions/download-artifact@v4
        with:
          name: documentation-api-c-${{ github.sha }}
          path: ./artifacts/c
+
+     - name: Download C++ Documentation
+       uses: actions/download-artifact@v4
+       with:
+         name: documentation-api-cxx-${{ github.sha }}
+         path: ./artifacts/cxx
 
      - name: Setup Pages directory structure
        run: |
@@ -844,6 +873,8 @@ jobs:
          cp -r ./artifacts/python/* ./pages/api/python/
          mkdir -p ./pages/api/c
          cp -r ./artifacts/c/* ./pages/api/c/
+         mkdir -p ./pages/api/cxx
+         cp -r ./artifacts/cxx/* ./pages/api/cxx/
 
      - name: Setup Pages
        uses: actions/configure-pages@v5
