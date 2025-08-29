@@ -34,7 +34,15 @@
                 <section class="language-section" id="{{ language.name | lower }}">
                     <div class="language-header">
                         <div class="language-icon-wrapper">
-                            <span class="language-icon {{ language.className }}">{{ language.icon }}</span>
+                            <span class="language-icon {{ language.className }}">
+                              {% if language.name == "Python" %}
+                              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
+                              {% elif language.name == "C" %}
+                              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg" alt="C" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
+                              {% elif language.name == "C++" %}
+                              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" alt="C++" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
+                              {% endif %}
+                          </span>
                         </div>
                         <div class="language-info">
                             <h3 class="language-title">{{ language.name }} Language Bindings</h3>
