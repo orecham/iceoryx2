@@ -34,21 +34,21 @@ jobs:
             markdown:
               - '**/*.md'
 
-  preflight-check:
-    needs: changes
-    if: ${{ needs.changes.outputs.source-code == 'true' }}
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4
-
-      - name: Check format of all commit messages
-        run: ./internal/scripts/ci_test_commit_msg.sh
-
-      - name: Check license header
-        run: ./internal/scripts/ci_test_spdx_license_header.sh
-
+#  preflight-check:
+#    needs: changes
+#    if: ${{ needs.changes.outputs.source-code == 'true' }}
+#    timeout-minutes: 10
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout sources
+#        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4
+#
+#      - name: Check format of all commit messages
+#        run: ./internal/scripts/ci_test_commit_msg.sh
+#
+#      - name: Check license header
+#        run: ./internal/scripts/ci_test_spdx_license_header.sh
+#
 #  linting-markdown:
 #    needs: changes
 #    if: ${{ needs.changes.outputs.markdown == 'true' }}

@@ -294,6 +294,113 @@ jobs:
           cp -r ./artifacts/c/* "./staged-pages/api/c/$VERSION/"
           cp -r ./artifacts/cxx/* "./staged-pages/api/cxx/$VERSION/"
 
+      - name: Generate landing page
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Install tera-cli
+          curl -L https://github.com/chevdor/tera-cli/releases/download/v0.5.0/tera-cli_linux_amd64.deb -o tera-cli.deb
+          sudo dpkg -i tera-cli.deb || sudo apt-get install -f
+          
+          # Function to discover versions for a language and create JSON
+          generate_versions_json() {
+            local lang_path=$1
+            local versions_array="[]"
+            
+            if [ -d "./staged-pages/$lang_path" ]; then
+              # Create temporary file to build JSON array
+              echo "[]" > temp_versions.json
+              
+              # Get all version directories, sort with main first
+              local all_versions=($(find "./staged-pages/$lang_path" -maxdepth 1 -type d -exec basename {} \; | grep -v "^$(basename "./staged-pages/$lang_path")$" | sort -V))
+              
+              # Move 'main' to front if it exists
+              local sorted_versions=()
+              for v in "${all_versions[@]}"; do
+                if [ "$v" = "main" ]; then
+                  sorted_versions=("main" "${sorted_versions[@]}")
+                else
+                  sorted_versions+=("$v")
+                fi
+              done
+              
+              # Build JSON array
+              for version in "${sorted_versions[@]}"; do
+                if [ -d "./staged-pages/$lang_path/$version" ]; then
+                  if [ "$version" = "main" ]; then
+                    versions_array=$(jq --argjson new '{
+                      "name": "'$version'",
+                      "url": "'$lang_path'/'$version'/", 
+                      "isLatest": true,
+                      "displayName": "📘 Latest (main)"
+                    }' '. + [$new]' temp_versions.json)
+                  else
+                    versions_array=$(jq --argjson new '{
+                      "name": "'$version'",
+                      "url": "'$lang_path'/'$version'/",
+                      "isLatest": false, 
+                      "displayName": "📖 '$version'"
+                    }' '. + [$new]' temp_versions.json)
+                  fi
+                  echo "$versions_array" > temp_versions.json
+                fi
+              done
+              
+              versions_array=$(cat temp_versions.json)
+              rm -f temp_versions.json
+            fi
+            
+            echo "$versions_array"
+          }
+          
+          # Generate complete context JSON for tera template
+          jq -n \
+            --arg title "iceoryx2 API Reference Documentation" \
+            --arg description "Language bindings for the iceoryx2 zero-copy inter-process communication library" \
+            --arg buildDate "$(date '+%Y-%m-%d %H:%M UTC')" \
+            --argjson pythonVersions "$(generate_versions_json 'api/python')" \
+            --argjson cVersions "$(generate_versions_json 'api/c')" \
+            --argjson cxxVersions "$(generate_versions_json 'api/cxx')" \
+            '{
+              title: $title,
+              description: $description, 
+              buildDate: $buildDate,
+              languages: [
+                {
+                  name: "Python",
+                  path: "api/python",
+                  icon: "Py",
+                  className: "python-icon", 
+                  versions: $pythonVersions
+                },
+                {
+                  name: "C",
+                  path: "api/c",
+                  icon: "C",
+                  className: "c-icon",
+                  versions: $cVersions
+                },
+                {
+                  name: "C++", 
+                  path: "api/cxx",
+                  icon: "C++",
+                  className: "cxx-icon",
+                  versions: $cxxVersions
+                }
+              ]
+            }' > context.json
+          
+          echo "Generated context JSON with $(jq '.languages | length' context.json) languages"
+          echo "Available versions per language:"
+          jq -r '.languages[] | "\(.name): \(.versions | length) versions"' context.json
+          
+          # Render template with tera
+          rm -f ./staged-pages/index.html
+          tera --template doc/api/templates/index.html.tera --out ./staged-pages/index.html context.json
+          
+          # Copy CSS file
+          cp doc/api/templates/styles.css ./staged-pages/
+
       - name: Upload artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
