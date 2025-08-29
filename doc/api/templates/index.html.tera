@@ -22,7 +22,7 @@
                 <p class="page-description">Hook into iceoryx2 from any language, interoperate with all languages.</p>
                 
                 <div class="header-badges">
-                    <span class="badge badge-success">{{ languages | length }} Language Bindings</span>
+                    <span class="badge badge-success">{{ languages | length }} Languages</span>
                     <span class="badge badge-info">Zero-Copy</span>
                     <span class="badge badge-secondary">Rust-Powered</span>
                 </div>
@@ -41,18 +41,22 @@
                               <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg" alt="C" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
                               {% elif language.name == "C++" %}
                               <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" alt="C++" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
+                              {% elif language.name == "Rust" %}
+                              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg" alt="Rust" onerror="this.style.display='none'; this.parentNode.textContent='{{ language.icon }}';">
                               {% endif %}
                           </span>
                         </div>
                         <div class="language-info">
-                            <h3 class="language-title">{{ language.name }} Language Bindings</h3>
+                            <h3 class="language-title">{{ language.name }} {% if language.name == "Rust" %}Core{% else %}Language Bindings{% endif %}</h3>
                             <p class="language-description">
-                                {% if language.name == "Python" %}
-                                Hook into iceoryx2 systems from Python applications.
+                                {% if language.name == "Rust" %}
+                                The native Rust API for iceoryx2
+                                {% elif language.name == "Python" %}
+                                Hook into iceoryx2 systems from Python applications
                                 {% elif language.name == "C++" %}
-                                Hook into iceoryx2 systems from C++ applications.
+                                Hook into iceoryx2 systems from C++ applications
                                 {% elif language.name == "C" %}
-                                Integrate iceoryx2 into C frameworks.
+                                Integrate iceoryx2 into C frameworks
                                 {% endif %}
                             </p>
                         </div>
@@ -63,10 +67,13 @@
                         <span class="version-label">Available Versions:</span>
                         <div class="version-tags">
                             {% for version in language.versions %}
-                            <a href="{{ version.url }}" class="version-tag{% if version.isLatest %} version-tag-latest{% endif %}">
+                            <a href="{{ version.url }}" class="version-tag{% if version.isLatest %} version-tag-latest{% endif %}"{% if language.name == "Rust" %} target="_blank" rel="noopener"{% endif %}>
                                 <span class="version-name">{{ version.name }}</span>
                                 {% if version.isLatest %}
                                 <span class="version-latest-badge">Latest</span>
+                                {% endif %}
+                                {% if language.name == "Rust" %}
+                                <span class="external-link-icon">↗</span>
                                 {% endif %}
                             </a>
                             {% endfor %}

@@ -215,6 +215,10 @@ body {
   background: #00599c; 
   color: white;
 }
+.rust-icon:not(:has(img)) { 
+  background: #ce422b; 
+  color: white;
+}
 
 .language-info {
   flex: 1;
@@ -306,6 +310,16 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+
+.external-link-icon {
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.version-tag:hover .external-link-icon {
+  opacity: 1;
 }
 
 .no-versions {

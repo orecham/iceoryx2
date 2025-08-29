@@ -95,8 +95,6 @@ jobs:
           poetry --project doc/api/python build-docs
 
       - name: Upload Python Documentation Artifact
-        # if: |
-        #   (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         if: |
           (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
@@ -126,8 +124,6 @@ jobs:
           cd doc/api/c && make html && cd -
 
       - name: Upload C Documentation Artifact
-        # if: |
-        #   (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         if: |
           (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
@@ -153,8 +149,6 @@ jobs:
           cd doc/api/cxx && make html && cd -
 
       - name: Upload C++ Documentation Artifact
-        # if: |
-        #   (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         if: |
           (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request')
         uses: actions/upload-artifact@v4
@@ -164,8 +158,6 @@ jobs:
           retention-days: 90
 
   deploy:
-    # if: |
-    #   (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     if: |
       (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request')
     needs: [build-api-reference-python, build-api-reference-c, build-api-reference-cxx]
@@ -296,25 +288,29 @@ jobs:
 
       - name: Generate landing page
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          
           # Install tera-cli
           curl -L https://github.com/chevdor/tera-cli/releases/download/v0.5.0/tera-cli_linux_amd64.deb -o tera-cli.deb
           sudo dpkg -i tera-cli.deb || sudo apt-get install -f
           
-          # Function to discover versions for a language and create JSON
-          generate_versions_json() {
+          fetch_rust_versions_json() {
+            local versions_array='[{
+              "name": "docs.rs",
+              "url": "https://docs.rs/iceoryx2/latest/iceoryx2/",
+              "isLatest": true
+            }]'
+            
+            echo "$versions_array"
+          }
+          
+          generate_bindings_versions_json() {
             local lang_path=$1
             local versions_array="[]"
             
             if [ -d "./staged-pages/$lang_path" ]; then
-              # Create temporary file to build JSON array
               echo "[]" > temp_versions.json
               
-              # Get all version directories, sort with main first
               local all_versions=($(find "./staged-pages/$lang_path" -maxdepth 1 -type d -exec basename {} \; | grep -v "^$(basename "./staged-pages/$lang_path")$" | sort -V))
               
-              # Move 'main' to front if it exists
               local sorted_versions=()
               for v in "${all_versions[@]}"; do
                 if [ "$v" = "main" ]; then
@@ -324,22 +320,19 @@ jobs:
                 fi
               done
               
-              # Build JSON array
               for version in "${sorted_versions[@]}"; do
                 if [ -d "./staged-pages/$lang_path/$version" ]; then
                   if [ "$version" = "main" ]; then
                     versions_array=$(jq --argjson new '{
                       "name": "'$version'",
                       "url": "'$lang_path'/'$version'/", 
-                      "isLatest": true,
-                      "displayName": "📘 Latest (main)"
+                      "isLatest": true
                     }' '. + [$new]' temp_versions.json)
                   else
                     versions_array=$(jq --argjson new '{
                       "name": "'$version'",
                       "url": "'$lang_path'/'$version'/",
-                      "isLatest": false, 
-                      "displayName": "📖 '$version'"
+                      "isLatest": false,
                     }' '. + [$new]' temp_versions.json)
                   fi
                   echo "$versions_array" > temp_versions.json
@@ -353,36 +346,48 @@ jobs:
             echo "$versions_array"
           }
           
-          # Generate context JSON for tera template
+          RUST_VERSIONS=$(fetch_rust_versions_json)
+          PYTHON_VERSIONS=$(generate_bindings_versions_json 'python')
+          C_VERSIONS=$(generate_bindings_versions_json 'c')
+          CXX_VERSIONS=$(generate_bindings_versions_json 'cxx')
+          
           jq -n \
             --arg title "iceoryx2 API Reference Documentation" \
             --arg description "Language bindings for the iceoryx2 zero-copy inter-process communication library" \
             --arg buildDate "$(date '+%Y-%m-%d %H:%M UTC')" \
-            --argjson pythonVersions "$(generate_versions_json 'python')" \
-            --argjson cVersions "$(generate_versions_json 'c')" \
-            --argjson cxxVersions "$(generate_versions_json 'cxx')" \
+            --argjson pythonVersions "$PYTHON_VERSIONS" \
+            --argjson cVersions "$C_VERSIONS" \
+            --argjson cxxVersions "$CXX_VERSIONS" \
+            --argjson rustVersions "$RUST_VERSIONS" \
             '{
               title: $title,
               description: $description, 
               buildDate: $buildDate,
               languages: [
                 {
+                  name: "Rust",
+                  path: "rust",
+                  icon: "Rs",
+                  className: "rust-icon", 
+                  versions: $rustVersions
+                },
+                {
                   name: "Python",
-                  path: "api/python",
+                  path: "python",
                   icon: "Py",
                   className: "python-icon", 
                   versions: $pythonVersions
                 },
                 {
                   name: "C++", 
-                  path: "api/cxx",
+                  path: "cxx",
                   icon: "C++",
                   className: "cxx-icon",
                   versions: $cxxVersions
                 },
                 {
                   name: "C",
-                  path: "api/c",
+                  path: "c",
                   icon: "C",
                   className: "c-icon",
                   versions: $cVersions
@@ -390,15 +395,7 @@ jobs:
               ]
             }' > context.json
           
-          echo "Generated context JSON with $(jq '.languages | length' context.json) languages"
-          echo "Available versions per language:"
-          jq -r '.languages[] | "\(.name): \(.versions | length) versions"' context.json
-          
-          # Render template with tera
-          rm -f ./staged-pages/index.html
           tera --template doc/api/templates/index.html.tera --out ./staged-pages/index.html context.json
-          
-          # Copy CSS file
           cp doc/api/templates/styles.css ./staged-pages/
 
       - name: Upload artifact to GitHub Pages
