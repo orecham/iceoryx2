@@ -29,29 +29,6 @@
                 </div>
             </header>
 
-            <!-- Quick access section -->
-            <section class="quick-access">
-                <h2 class="quick-access-title">Get Started with iceoryx2</h2>
-                <div class="quick-access-grid">
-                    {% for language in languages %}
-                    {% if language.versions %}
-                    {% for version in language.versions %}
-                    {% if version.isLatest %}
-                    <a href="{{ version.url }}" class="quick-access-link">
-                        <span class="quick-access-icon {{ language.className }}">{{ language.icon }}</span>
-                        <div class="quick-access-text">
-                            <span class="quick-access-name">{{ language.name }} Bindings</span>
-                            <span class="quick-access-desc">{{ version.name }} API reference</span>
-                        </div>
-                        <span class="quick-access-arrow">→</span>
-                    </a>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </section>
-
             <!-- Language sections -->
             <div class="language-sections">
                 {% for language in languages %}
