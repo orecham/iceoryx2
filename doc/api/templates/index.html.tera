@@ -18,13 +18,12 @@
     <main class="main-content">
         <div class="content-wrapper">
             <header class="page-header">
-                <h1 class="page-title">iceoryx2 API Documentation</h1>
-                <p class="page-description">API Reference for the Language bindings to iceoryx2, the zero-copy inter-process communication library</p>
+                <h1 class="page-title">iceoryx2 API Reference</h1>
+                <p class="page-description">Hook into iceoryx2 from any language, interoperate with all languages.</p>
                 
                 <div class="header-badges">
                     <span class="badge badge-success">{{ languages | length }} Language Bindings</span>
                     <span class="badge badge-info">Zero-Copy</span>
-                    <span class="badge badge-info">IPC</span>
                     <span class="badge badge-secondary">Rust-Powered</span>
                 </div>
             </header>
@@ -41,11 +40,11 @@
                             <h3 class="language-title">{{ language.name }} Language Bindings</h3>
                             <p class="language-description">
                                 {% if language.name == "Python" %}
-                                Python API
-                                {% elif language.name == "C" %}
-                                Low-level C API
+                                Hook into iceoryx2 systems from Python applications.
                                 {% elif language.name == "C++" %}
-                                Modern C++ API
+                                Hook into iceoryx2 systems from C++ applications.
+                                {% elif language.name == "C" %}
+                                Integrate iceoryx2 into C frameworks.
                                 {% endif %}
                             </p>
                         </div>

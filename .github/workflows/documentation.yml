@@ -353,7 +353,7 @@ jobs:
             echo "$versions_array"
           }
           
-          # Generate complete context JSON for tera template
+          # Generate context JSON for tera template
           jq -n \
             --arg title "iceoryx2 API Reference Documentation" \
             --arg description "Language bindings for the iceoryx2 zero-copy inter-process communication library" \
@@ -374,18 +374,18 @@ jobs:
                   versions: $pythonVersions
                 },
                 {
-                  name: "C",
-                  path: "api/c",
-                  icon: "C",
-                  className: "c-icon",
-                  versions: $cVersions
-                },
-                {
                   name: "C++", 
                   path: "api/cxx",
                   icon: "C++",
                   className: "cxx-icon",
                   versions: $cxxVersions
+                },
+                {
+                  name: "C",
+                  path: "api/c",
+                  icon: "C",
+                  className: "c-icon",
+                  versions: $cVersions
                 }
               ]
             }' > context.json
