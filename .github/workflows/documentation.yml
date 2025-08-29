@@ -285,14 +285,14 @@ jobs:
 
           # Remove existing docs for this version and create fresh directories
           echo "Setting up directories for version: $VERSION"
-          rm -rf "./staged-pages/api/python/$VERSION" "./staged-pages/api/c/$VERSION" "./staged-pages/api/cxx/$VERSION" 2>/dev/null || true
-          mkdir -p "./staged-pages/api/python/$VERSION" "./staged-pages/api/c/$VERSION" "./staged-pages/api/cxx/$VERSION"
+          rm -rf "./staged-pages/python/$VERSION" "./staged-pages/c/$VERSION" "./staged-pages/cxx/$VERSION" 2>/dev/null || true
+          mkdir -p "./staged-pages/python/$VERSION" "./staged-pages/c/$VERSION" "./staged-pages/cxx/$VERSION"
 
           # Copy new documentation
           echo "Installing new documentation for version: $VERSION"
-          cp -r ./artifacts/python/* "./staged-pages/api/python/$VERSION/"
-          cp -r ./artifacts/c/* "./staged-pages/api/c/$VERSION/"
-          cp -r ./artifacts/cxx/* "./staged-pages/api/cxx/$VERSION/"
+          cp -r ./artifacts/python/* "./staged-pages/python/$VERSION/"
+          cp -r ./artifacts/c/* "./staged-pages/c/$VERSION/"
+          cp -r ./artifacts/cxx/* "./staged-pages/cxx/$VERSION/"
 
       - name: Generate landing page
         run: |
@@ -358,9 +358,9 @@ jobs:
             --arg title "iceoryx2 API Reference Documentation" \
             --arg description "Language bindings for the iceoryx2 zero-copy inter-process communication library" \
             --arg buildDate "$(date '+%Y-%m-%d %H:%M UTC')" \
-            --argjson pythonVersions "$(generate_versions_json 'api/python')" \
-            --argjson cVersions "$(generate_versions_json 'api/c')" \
-            --argjson cxxVersions "$(generate_versions_json 'api/cxx')" \
+            --argjson pythonVersions "$(generate_versions_json 'python')" \
+            --argjson cVersions "$(generate_versions_json 'c')" \
+            --argjson cxxVersions "$(generate_versions_json 'cxx')" \
             '{
               title: $title,
               description: $description, 
