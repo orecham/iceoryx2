@@ -178,6 +178,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Build and cache tera
         uses: ./.github/actions/build-and-cache-rust-tool
