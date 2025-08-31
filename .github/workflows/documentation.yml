@@ -11,6 +11,20 @@ on:
     # nightly at 02:00 UTC - prevents artifact expiration
     - cron: '0 2 * * *'
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - delete
+      version:
+        description: 'Version to deploy or delete (e.g., "main", "v1.2.3")'
+        required: true
+        default: 'main'
+        type: string
 
 jobs:
 
@@ -45,7 +59,8 @@ jobs:
       needs.changes.result == 'success' &&
       (github.event_name != 'pull_request' || 
        needs.changes.outputs.source-code == 'true' || 
-       needs.changes.outputs.api-docs == 'true')
+       needs.changes.outputs.api-docs == 'true') &&
+      !(github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'delete')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -76,8 +91,7 @@ jobs:
           poetry --project doc/api/python build-docs
 
       - name: Upload Python Documentation Artifact
-        # TODO: Uncomment this condition to skip uploads on pull requests
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: documentation-api-python-${{ github.sha }}
@@ -90,7 +104,8 @@ jobs:
       needs.changes.result == 'success' &&
       (github.event_name != 'pull_request' || 
        needs.changes.outputs.source-code == 'true' || 
-       needs.changes.outputs.api-docs == 'true')
+       needs.changes.outputs.api-docs == 'true') &&
+      !(github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'delete')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -109,8 +124,7 @@ jobs:
           cd doc/api/c && make html && cd -
 
       - name: Upload C Documentation Artifact
-        # TODO: Uncomment this condition to skip uploads on pull requests
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: documentation-api-c-${{ github.sha }}
@@ -123,7 +137,8 @@ jobs:
       needs.changes.result == 'success' &&
       (github.event_name != 'pull_request' || 
        needs.changes.outputs.source-code == 'true' || 
-       needs.changes.outputs.api-docs == 'true')
+       needs.changes.outputs.api-docs == 'true') &&
+      !(github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'delete')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -138,8 +153,7 @@ jobs:
           cd doc/api/cxx && make html && cd -
 
       - name: Upload C++ Documentation Artifact
-        # TODO: Uncomment this condition to skip uploads on pull requests
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: documentation-api-cxx-${{ github.sha }}
@@ -148,8 +162,9 @@ jobs:
 
   deploy:
     needs: [build-api-reference-python, build-api-reference-c, build-api-reference-cxx]
-    # TODO: Uncomment this condition to skip deploy on pull requests
-    # if: github.event_name != 'pull_request'
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'delete') ||
+      (!cancelled() && !failure() && github.event_name != 'pull_request')
     runs-on: ubuntu-latest
     
     permissions:
@@ -245,21 +260,42 @@ jobs:
 
       - name: Prepare new artifact for GitHub Pages
         run: |
-          # Determine version/branch name
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # Determine version/branch name and action
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            INPUT_VERSION="${{ github.event.inputs.version }}"
+            ACTION="${{ github.event.inputs.action }}"
+            
+            # Workflow dispatch should only run for main or existing tags
+            if [[ "$INPUT_VERSION" == "main" ]]; then
+              VERSION="main"
+            elif [[ "$INPUT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+              if git tag -l | grep -q "^$INPUT_VERSION$"; then
+                VERSION="$INPUT_VERSION"
+              else
+                echo "Error: Tag '$INPUT_VERSION' does not exist"
+                exit 1
+              fi
+            else
+              echo "Error: Invalid version '$INPUT_VERSION'. Only 'main' or existing version tags (e.g., v1.2.3) are allowed."
+              exit 1
+            fi
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             VERSION="main"
+            ACTION="deploy"
           elif [[ "${{ github.event_name }}" == "schedule" ]]; then
             VERSION="main"
+            ACTION="deploy"
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             VERSION="main"
+            ACTION="deploy"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VERSION="${{ github.ref_name }}"
+            ACTION="deploy"
           else
             VERSION="${{ github.ref_name }}"
+            ACTION="deploy"
           fi
           
-          echo "Preparing Pages with new artifact for version: $VERSION"
-
           mkdir -p ./staged-artifacts
 
           # Retrieve previous artifacts if available
@@ -270,16 +306,32 @@ jobs:
             echo "No old artifacts found, starting fresh"
           fi
 
-          # Remove existing artifact for this version and create fresh directories
-          echo "Setting up directories for version: $VERSION"
-          rm -rf "./staged-artifacts/python/$VERSION" "./staged-artifacts/c/$VERSION" "./staged-artifacts/cxx/$VERSION" 2>/dev/null || true
-          mkdir -p "./staged-artifacts/python/$VERSION" "./staged-artifacts/c/$VERSION" "./staged-artifacts/cxx/$VERSION"
+          if [[ "$ACTION" == "delete" ]]; then
+            # For deletion, check if version exists in current documentation
+            if [ -d "./staged-artifacts/python/$VERSION" ] || [ -d "./staged-artifacts/c/$VERSION" ] || [ -d "./staged-artifacts/cxx/$VERSION" ]; then
+              echo "Deleting documentation for version: $VERSION"
+              rm -rf "./staged-artifacts/python/$VERSION" "./staged-artifacts/c/$VERSION" "./staged-artifacts/cxx/$VERSION" 2>/dev/null || true
+            else
+              echo "Error: Version '$VERSION' not found in existing documentation"
+              exit 1
+            fi
+          elif [[ "$ACTION" == "deploy" ]]; then
+            echo "Deploying documentation for version: $VERSION"
+            
+            # Remove existing artifact for this version and create fresh directories
+            echo "Setting up directories for version: $VERSION"
+            rm -rf "./staged-artifacts/python/$VERSION" "./staged-artifacts/c/$VERSION" "./staged-artifacts/cxx/$VERSION" 2>/dev/null || true
+            mkdir -p "./staged-artifacts/python/$VERSION" "./staged-artifacts/c/$VERSION" "./staged-artifacts/cxx/$VERSION"
 
-          # Copy new artifacts
-          echo "Staging new artifacts for version: $VERSION"
-          cp -r ./new-artifacts/python/* "./staged-artifacts/python/$VERSION/"
-          cp -r ./new-artifacts/c/* "./staged-artifacts/c/$VERSION/"
-          cp -r ./new-artifacts/cxx/* "./staged-artifacts/cxx/$VERSION/"
+            # Copy new artifacts
+            echo "Staging new artifacts for version: $VERSION"
+            cp -r ./new-artifacts/python/* "./staged-artifacts/python/$VERSION/"
+            cp -r ./new-artifacts/c/* "./staged-artifacts/c/$VERSION/"
+            cp -r ./new-artifacts/cxx/* "./staged-artifacts/cxx/$VERSION/"
+          else
+            echo "Error: Unknown action '$ACTION'"
+            exit 1
+          fi
 
       - name: Generate landing page
         run: |
