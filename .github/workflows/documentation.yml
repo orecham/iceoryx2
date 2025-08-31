@@ -231,7 +231,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Download existing GitHub Pages deployment
+      - name: Download deployed GitHub Pages artifact
         if: steps.find-previous.outputs.found == 'true'
         uses: actions/download-artifact@v4
         with:
@@ -240,19 +240,22 @@ jobs:
           run-id: ${{ steps.find-previous.outputs.run-id }}
           github-token: ${{ github.token }}
 
-      - name: Download Python documentation artifact
+      - name: Download newly-built Python documentation artifact
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.action != 'delete'
         uses: actions/download-artifact@v4
         with:
           name: documentation-api-python-${{ github.sha }}
           path: ./new-artifacts/python
 
-      - name: Download C documentation artifact
+      - name: Download newly-built C documentation artifact
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.action != 'delete'
         uses: actions/download-artifact@v4
         with:
           name: documentation-api-c-${{ github.sha }}
           path: ./new-artifacts/c
 
-      - name: Download C++ documentation artifact
+      - name: Download newly-built C++ documentation artifact
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.action != 'delete'
         uses: actions/download-artifact@v4
         with:
           name: documentation-api-cxx-${{ github.sha }}
@@ -265,7 +268,7 @@ jobs:
             INPUT_VERSION="${{ github.event.inputs.version }}"
             ACTION="${{ github.event.inputs.action }}"
             
-            # Workflow dispatch should only run for main or existing tags
+            # Workflow dispatch should only run for 'main' or existing tags
             if [[ "$INPUT_VERSION" == "main" ]]; then
               VERSION="main"
             elif [[ "$INPUT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
@@ -333,7 +336,7 @@ jobs:
             exit 1
           fi
 
-      - name: Generate landing page
+      - name: Generate pages from templates
         run: |
           # Fetch the available Rust documentation
           # NOTE: Since docs.rs blocks github actions from hitting its API,
@@ -356,7 +359,8 @@ jobs:
             if [ -d "./staged-artifacts/$lang_path" ]; then
               echo "[]" > temp_versions.json
               
-              local all_versions=($(find "./staged-artifacts/$lang_path" -maxdepth 1 -type d -exec basename {} \; | grep -v "^$(basename "./staged-artifacts/$lang_path")$"))
+              # Retrieve all versions from the path, excluding the latest redirect
+              local all_versions=($(find "./staged-artifacts/$lang_path" -maxdepth 1 -type d -exec basename {} \; | grep -v "^$(basename "./staged-artifacts/$lang_path")$" | grep -v "^latest$"))
               
               # Separate main from version tags
               local main_version=""
@@ -409,7 +413,7 @@ jobs:
             echo "$versions_array"
           }
           
-          # Generate JSON context for tera
+          # Generate JSON context for templates
           RUST_VERSIONS=$(fetch_rust_versions_json)
           PYTHON_VERSIONS=$(generate_bindings_versions_json 'python')
           C_VERSIONS=$(generate_bindings_versions_json 'c')
@@ -457,11 +461,27 @@ jobs:
                   versions: $cVersions
                 }
               ]
-            }' > context.json
+            }' > landing_context.json
           
-          # Generate landing page from tera template
-          tera --file doc/api/templates/landing-page/index.html.tera --json context.json > ./staged-artifacts/index.html
+          # Generate landing page
+          tera --file doc/api/templates/landing-page/index.html.tera --json landing_context.json > ./staged-artifacts/index.html
           cp doc/api/templates/landing-page/styles.css ./staged-artifacts/
+          
+          # Generate redirect for latest
+          declare -A VERSIONS_MAP=([python]="$PYTHON_VERSIONS" [c]="$C_VERSIONS" [cxx]="$CXX_VERSIONS")
+          declare -A NAMES_MAP=([python]="Python" [c]="C" [cxx]="C++")
+          
+          for lang_path in "${!VERSIONS_MAP[@]}"; do
+            LATEST_URL=$(echo "${VERSIONS_MAP[$lang_path]}" | jq -r '.[] | select(.isLatest == true) | .url')
+            if [ -n "$LATEST_URL" ] && [ "$LATEST_URL" != "null" ]; then
+              # Select the version specified as 'isLatest'
+              jq -n --arg language "${NAMES_MAP[$lang_path]}" --arg url "$LATEST_URL" '{language: $language, url: $url}' > redirect_context.json
+
+              # Generate the page
+              mkdir -p "./staged-artifacts/$lang_path/latest"
+              tera --file doc/api/templates/latest/index.html.tera --json redirect_context.json > "./staged-artifacts/$lang_path/latest/index.html"
+            fi
+          done
 
       - name: Upload artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
