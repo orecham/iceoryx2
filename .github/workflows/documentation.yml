@@ -416,7 +416,7 @@ jobs:
             echo "$versions_array"
           }
           
-          # Generate JSON context for templates
+          # Generate JSON context for templates 
           RUST_VERSIONS=$(fetch_rust_versions_json)
           PYTHON_VERSIONS=$(generate_bindings_versions_json 'python')
           C_VERSIONS=$(generate_bindings_versions_json 'c')
