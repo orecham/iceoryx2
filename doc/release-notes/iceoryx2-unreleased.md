@@ -23,6 +23,8 @@
 * Remove duplicate entries in `iox2` command search path to prevent discovered
   commands from being listed multiple times
     [#1045](https://github.com/eclipse-iceoryx/iceoryx2/issues/1045)
+* Print help for positional arguments in CLI
+    [#709](https://github.com/eclipse-iceoryx/iceoryx2/issues/709)
 * Print new line after CLI output to prevent '%' from being inserted by terminal
     [#709](https://github.com/eclipse-iceoryx/iceoryx2/issues/709)
 
@@ -42,7 +44,8 @@
     conflicts when merging.
 -->
 
-* Example text [#1](https://github.com/eclipse-iceoryx/iceoryx2/issues/1)
+* Add end-to-end tests for `iceoryx2-cli`
+    [#709](https://github.com/eclipse-iceoryx/iceoryx2/issues/709)
 
 ### New API features
 
@@ -51,7 +54,8 @@
     conflicts when merging.
 -->
 
-* Example text [#1](https://github.com/eclipse-iceoryx/iceoryx2/issues/1)
+* Add option to force overwrite configuration with `iox2 config generate`
+    [#709](https://github.com/eclipse-iceoryx/iceoryx2/issues/709)
 
 ### API Breaking Changes
 
